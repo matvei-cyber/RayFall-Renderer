@@ -269,36 +269,36 @@ struct vec3
 
 inline vec3 linear_RGB_to_sRGB (const vec3& color)
 {
-    vec3 new_color;
+    vec3 new_col;
 
     if (color.x <= 0.0031308f)
     {
-        new_color.x = 12.92f * color.x;
+        new_col.x = 12.92f * color.x;
 
     } else
     {
-        new_color.x = (1.055f * std::pow (color.x, (1.0f / 2.4f))) - 0.055f;
+        new_col.x = (1.055f * std::pow (color.x, (1.0f / 2.4f))) - 0.055f;
     }
 
     if (color.y <= 0.0031308f)
     {
-        new_color.y = 12.92f * color.y;
+        new_col.y = 12.92f * color.y;
 
     } else
     {
-        new_color.y = (1.055f * std::pow (color.y, (1.0f / 2.4f))) - 0.055f;
+        new_col.y = (1.055f * std::pow (color.y, (1.0f / 2.4f))) - 0.055f;
     }
 
     if (color.z <= 0.0031308f)
     {
-        new_color.z = 12.92f * color.z;
+        new_col.z = 12.92f * color.z;
 
     } else
     {
-        new_color.z = (1.055f * std::pow (color.z, (1.0f / 2.4f))) - 0.055f;
+        new_col.z = (1.055f * std::pow (color.z, (1.0f / 2.4f))) - 0.055f;
     }
 
-    return new_color;
+    return new_col;
 }
 
 inline void convert_linear_RGB_to_sRGB (vec3& color)
@@ -343,17 +343,17 @@ inline vec3 random_sphere_vector_normalized ()
     float x = random_float ();
     float y = random_float ();
     float z = random_float ();
-    vec3 random_vector = {x, y, z};
+    vec3 rand_vec = {x, y, z};
 
-    while ((random_vector.dot (random_vector) > 1.0f) || ((x == 0.0f) && (y == 0.0f) && (z == 0.0f)))
+    while ((rand_vec.dot (rand_vec) > 1.0f) || ((x == 0.0f) && (y == 0.0f) && (z == 0.0f)))
     {
         x = random_float ();
         y = random_float ();
         z = random_float ();   
-        random_vector = {x, y, z};
+        rand_vec = {x, y, z};
     }
 
-    return random_vector.normalized ();
+    return rand_vec.normalized ();
 }
 
 inline float clamp (const float var, const float min_val, const float max_val)
@@ -377,42 +377,42 @@ struct camera3D
 {
     vec3 origin;
     vec3 target;
-    vec3 dir;
+    vec3 direction;
     vec3 right;
     vec3 up;
     float aspect_ratio;
-    float hor_FOV_deg;
-    float hor_FOV;
+    float horizontal_FOV_degrees;
+    float horizontal_FOV;
     float width;
     float height;
-    vec3 plane_pos;
-    float plane_hor_size;
-    float plane_vert_size;
+    vec3 plane_position;
+    float plane_horizontal_size;
+    float plane_vertical_size;
 
 
-    camera3D () : origin (vec3 {}), target (1.0f, 0.0f, 0.0f), hor_FOV_deg (90.0f), width (1920.0f), height (1080.0f)
+    camera3D () : origin (vec3 {}), target (1.0f, 0.0f, 0.0f), horizontal_FOV_degrees (90.0f), width (1920.0f), height (1080.0f)
     {
-        hor_FOV = deg_to_rad (hor_FOV_deg);
+        horizontal_FOV = deg_to_rad (horizontal_FOV_degrees);
         aspect_ratio = width / height;
-        plane_hor_size = 2 * std::tanf (hor_FOV / 2.0f);
-        plane_vert_size = plane_hor_size / aspect_ratio;
-        dir = target.sub (origin).normalized ();
-        plane_pos = origin.add (dir);
-        right = dir.cross (vec3 {0.0f, 0.0f, 1.0f}).normalized ();
-        up = right.cross (dir).normalized ();
+        plane_horizontal_size = 2 * std::tanf (horizontal_FOV / 2.0f);
+        plane_vertical_size = plane_horizontal_size / aspect_ratio;
+        direction = target.sub (origin).normalized ();
+        plane_position = origin.add (direction);
+        right = direction.cross (vec3 {0.0f, 0.0f, 1.0f}).normalized ();
+        up = right.cross (direction).normalized ();
     }
 
     camera3D (const vec3& origin_position, const vec3& target_position, const float horizontal_FOV_in_degrees, const float screen_width, const float screen_height):
-    origin (origin_position), target (target_position), hor_FOV_deg (horizontal_FOV_in_degrees), width (screen_width), height (screen_height)
+    origin (origin_position), target (target_position), horizontal_FOV_degrees (horizontal_FOV_in_degrees), width (screen_width), height (screen_height)
     {
-        hor_FOV = deg_to_rad (hor_FOV_deg);
+        horizontal_FOV = deg_to_rad (horizontal_FOV_degrees);
         aspect_ratio = width / height;
-        plane_hor_size = 2 * std::tanf (hor_FOV / 2.0f);
-        plane_vert_size = plane_hor_size / aspect_ratio;
-        dir = target.sub (origin).normalized ();
-        plane_pos = origin.add (dir);
-        right = dir.cross (vec3 {0.0f, 0.0f, 1.0f}).normalized ();
-        up = right.cross (dir).normalized ();
+        plane_horizontal_size = 2 * std::tanf (horizontal_FOV / 2.0f);
+        plane_vertical_size = plane_horizontal_size / aspect_ratio;
+        direction = target.sub (origin).normalized ();
+        plane_position = origin.add (direction);
+        right = direction.cross (vec3 {0.0f, 0.0f, 1.0f}).normalized ();
+        up = right.cross (direction).normalized ();
     }
 };
 
@@ -427,13 +427,13 @@ struct hit_info
 struct ray
 {
     vec3 origin;
-    vec3 dir;
-    vec3 color_contrib = {1.0f, 1.0f, 1.0f};
+    vec3 direction;
+    vec3 pixel_color_contribution = {1.0f, 1.0f, 1.0f};
     hit_info info;
     int bounces = 0;
 
-    ray () : origin (vec3 {}), dir (vec3 {1.0f, 0.0f, 0.0f}) {}
-    ray (const vec3& origin_position, const vec3& direction) : origin (origin_position), dir (direction) {}
+    ray () : origin (vec3 {}), direction (vec3 {1.0f, 0.0f, 0.0f}) {}
+    ray (const vec3& origin_position, const vec3& direction) : origin (origin_position), direction (direction) {}
 };
 
 struct Object
@@ -463,7 +463,7 @@ struct sphere : Object
         vec3 O = ray.origin;
         vec3 C = origin;
         vec3 L = O.sub (C);
-        vec3 D = ray.dir;
+        vec3 D = ray.direction;
         float R = radius;
 
         float disc = (L.dot (D) * L.dot (D)) - (L.dot (L) - (R * R));
@@ -520,7 +520,6 @@ struct sphere : Object
                 ray.info.color = surface_color;
                 return true;
             }
-
         }
 
         return false;
@@ -529,7 +528,7 @@ struct sphere : Object
 
 struct Plane : Object
 {
-    float z_pos;
+    float z_level;
     float min_x;
     float max_x;
     float min_y;
@@ -538,17 +537,17 @@ struct Plane : Object
     vec3 surface_color;
 
 
-    Plane () : z_pos (0.0f), min_x (-1.0f), max_x (1.0f), min_y (-1.0f), max_y (1.0f), normal (0.0f, 0.0f, 1.0f), surface_color (1.0f, 1.0f, 1.0f) {}
+    Plane () : z_level (0.0f), min_x (-1.0f), max_x (1.0f), min_y (-1.0f), max_y (1.0f), normal (0.0f, 0.0f, 1.0f), surface_color (1.0f, 1.0f, 1.0f) {}
 
     Plane (const float z_position, const float min_x_pos, const float max_x_pos, const float min_y_pos, const float max_y_pos, const vec3& normal_vec,
-           const vec3& surface_color_value): z_pos (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos),
+           const vec3& surface_color_value): z_level (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos),
            normal (normal_vec), surface_color (surface_color_value) {}
 
     bool intersect (ray& ray)
     {
-        float p_z = z_pos;
+        float p_z = z_level;
         float ray_o_z = ray.origin.z;
-        float ray_d_z = ray.dir.z;
+        float ray_d_z = ray.direction.z;
 
         if (ray_d_z == 0.0f)
         {
@@ -559,7 +558,7 @@ struct Plane : Object
 
         if (t >= 0.0f)
         {
-            vec3 I = ray.origin.add (ray.dir.mul (t));
+            vec3 I = ray.origin.add (ray.direction.mul (t));
             float dist = I.sub (ray.origin).length ();
 
             if (I.x > min_x && I.x < max_x && I.y > min_y && I.y < max_y && (dist < ray.info.distance))
@@ -580,9 +579,9 @@ inline vec3 calculate_pixel_cords (const camera3D& camera, const float pixel_x, 
 {
     float norm_px_x = pixel_x / camera.width;
     float norm_px_y = pixel_y / camera.height;
-    vec3 cam_plane_left_up_corner_pos = camera.plane_pos.add (-camera.right.mul (camera.plane_hor_size / 2.0f)).add (camera.up.mul (camera.plane_vert_size / 2.0f));
-    float rel_px_x_pos = (norm_px_x * camera.plane_hor_size) + (camera.plane_hor_size / (2 * camera.width));
-    float rel_px_y_pos = (norm_px_y * camera.plane_vert_size) + (camera.plane_vert_size / (2 * camera.height));
+    vec3 cam_plane_left_up_corner_pos = camera.plane_position.add (-camera.right.mul (camera.plane_horizontal_size / 2.0f)).add (camera.up.mul (camera.plane_vertical_size / 2.0f));
+    float rel_px_x_pos = (norm_px_x * camera.plane_horizontal_size) + (camera.plane_horizontal_size / (2 * camera.width));
+    float rel_px_y_pos = (norm_px_y * camera.plane_vertical_size) + (camera.plane_vertical_size / (2 * camera.height));
     vec3 px_pos = cam_plane_left_up_corner_pos.add (camera.right.mul (rel_px_x_pos)).sub (camera.up.mul (rel_px_y_pos));
     return px_pos;
 }
@@ -598,12 +597,15 @@ inline ray cast_ray (const camera3D& camera, const float x, const float y)
 inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray& ray, const int max_bounces)
 {
     vec3 sky_color = {0.25f, 0.5f, 1.0f};
+    vec3 contrib;
+    vec3 dir;
 
     while (ray.bounces < max_bounces)
     {
         ray.info.distance = 1e6f;
         bool hit_anything = false;
-        vec3 color;
+        contrib = ray.pixel_color_contribution;
+        dir = ray.direction;
 
         for (const auto& obj : scene)
         {
@@ -615,16 +617,15 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
 
         if (!hit_anything)
         {
-            color = ray.color_contrib * sky_color;
-            return color;
+            return contrib * sky_color;
         }
 
-        if (ray.dir.dot (ray.info.normal) > 0.0f)
+        if (dir.dot (ray.info.normal) > 0.0f)
         {
             ray.info.normal = -ray.info.normal;
         }
 
-        ray.color_contrib *= ray.info.color;
+        contrib *= ray.info.color;
         ray.origin = ray.info.point.add (ray.info.normal.mul (0.0001f));
         vec3 rand_vec = random_sphere_vector_normalized ();
 
@@ -633,8 +634,10 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
             rand_vec = -rand_vec;
         }
 
-        ray.color_contrib.mul_rw (2.0f * rand_vec.dot (ray.info.normal));
-        ray.dir = rand_vec;
+        contrib.mul_rw (2.0f * rand_vec.dot (ray.info.normal));
+        dir = rand_vec;
+        ray.direction = dir;
+        ray.pixel_color_contribution = contrib;
         ray.bounces ++;
     }
 
