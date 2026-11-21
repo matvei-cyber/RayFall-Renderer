@@ -334,7 +334,7 @@ inline void convert_linear_RGB_to_sRGB (vec3& color)
 
 inline float random_float ()
 {
-    thread_local std::mt19937 gen (std::random_device {}());
+    thread_local std::mt19937 gen (0);
     thread_local std::uniform_real_distribution <float> dist (-1.0f, 1.0f);
     return dist (gen);
 }
