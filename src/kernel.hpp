@@ -226,11 +226,9 @@ struct vec3
     vec3 cross (const vec3& other) const
     {
         vec3 res;
-
         res.x = (y * other.z) - (z * other.y);
         res.y = (z * other.x) - (x * other.z);
         res.z = (x * other.y) - (y * other.x);
-
         return res;
     }
 
@@ -335,18 +333,27 @@ inline void convert_linear_RGB_to_sRGB (vec3& color)
 
 inline float random_float ()
 {
-    thread_local std::random_device rd;
-    thread_local std::mt19937 gen (rd ());
-    thread_local std::uniform_real_distribution <float> dist (0.0f, 1.0f);
+    thread_local std::mt19937 gen (std::random_device {}());
+    thread_local std::uniform_real_distribution <float> dist (-1.0f, 1.0f);
     return dist (gen);
 }
 
-inline vec3 random_vector ()
+inline vec3 random_sphere_vector_normalized ()
 {
-    float z = (random_float () * 2.0f) - 1.0f;
-    float a = random_float () * 2.0f * pi;
-    float r = std::sqrt (std::max (0.0f, 1.0f - (z * z)));
-    return {r * std::cos (a), r * std::sin (a), z};
+    float x = random_float ();
+    float y = random_float ();
+    float z = random_float ();
+    vec3 random_vector = {x, y, z};
+
+    while ((random_vector.dot (random_vector) > 1.0f) || ((x == 0.0f) && (y == 0.0f) && (z == 0.0f)))
+    {
+        x = random_float ();
+        y = random_float ();
+        z = random_float ();   
+        random_vector = {x, y, z};
+    }
+
+    return random_vector.normalized ();
 }
 
 inline float clamp (const float var, const float min_val, const float max_val)
@@ -527,13 +534,15 @@ struct Plane : Object
     float max_x;
     float min_y;
     float max_y;
+    vec3 normal;
     vec3 surface_color;
 
 
-    Plane () : z_pos (0.0f), min_x (-1.0f), max_x (1.0f), min_y (-1.0f), max_y (1.0f), surface_color (1.0f, 1.0f, 1.0f) {}
+    Plane () : z_pos (0.0f), min_x (-1.0f), max_x (1.0f), min_y (-1.0f), max_y (1.0f), normal (0.0f, 0.0f, 1.0f), surface_color (1.0f, 1.0f, 1.0f) {}
 
-    Plane (const float z_position, const float min_x_pos, const float max_x_pos, const float min_y_pos, const float max_y_pos, const vec3& surface_color_value):
-    z_pos (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos), surface_color (surface_color_value) {}
+    Plane (const float z_position, const float min_x_pos, const float max_x_pos, const float min_y_pos, const float max_y_pos, const vec3& normal_vec,
+           const vec3& surface_color_value): z_pos (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos),
+           normal (normal_vec), surface_color (surface_color_value) {}
 
     bool intersect (ray& ray)
     {
@@ -557,7 +566,7 @@ struct Plane : Object
             {
                 ray.info.point = I;
                 ray.info.distance = dist;
-                ray.info.normal = vec3 {0.0f, 0.0f, 1.0f};
+                ray.info.normal = normal;
                 ray.info.color = surface_color;
                 return true;
             }
@@ -612,10 +621,22 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
 
         ray.color_contrib *= ray.info.color;
         ray.origin = ray.info.point.add (ray.info.normal.mul (0.0001f));
-        vec3 rand = random_vector ();
-        vec3 new_dir = (rand.dot (ray.info.normal) < 0.0f) ? -rand : rand;
-        ray.color_contrib.mul_rw (2.0f * new_dir.dot (ray.info.normal));
-        ray.dir = new_dir;
+        vec3 rand_vec = random_sphere_vector_normalized ();
+
+        if (rand_vec.dot (ray.info.normal) < 0.0f)
+        {
+            rand_vec = -rand_vec;
+
+        } else if (std::abs (rand_vec.dot (ray.info.normal)) < 0.0001f)
+        {
+            while (std::abs (rand_vec.dot (ray.info.normal)) < 0.0001f)
+            {
+                rand_vec = random_sphere_vector_normalized ();
+            }
+        }
+
+        ray.color_contrib.mul_rw (2.0f * rand_vec.dot (ray.info.normal));
+        ray.dir = rand_vec;
         ray.bounces ++;
     }
 
