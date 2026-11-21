@@ -339,7 +339,7 @@ inline float random_float ()
     return dist (gen);
 }
 
-inline vec3 random_sphere_vector_normalized ()
+inline vec3 random_Sphere_vector_normalized ()
 {
     float x = random_float ();
     float y = random_float ();
@@ -453,13 +453,20 @@ struct Object
     virtual bool intersect (ray& ray) = 0;
 };
 
-struct sphere : Object
+struct Sphere : Object
 {
     vec3 origin;
     float radius;
     vec3 surface_color;
+    std::optional <Emitter> emitter = std::nullopt;
 
-    sphere (const vec3& origin_position, const float radius_value, const vec3& surface_color_value) : origin (origin_position), radius (radius_value), surface_color (surface_color_value) {}
+
+    Sphere (const vec3& origin_position, const float radius_value, const vec3& surface_color_value):
+    origin (origin_position), radius (radius_value), surface_color (surface_color_value) {}
+
+    Sphere (const vec3& origin_position, const float radius_value, const Emitter& emitter_info):
+    origin (origin_position), radius (radius_value), emitter (emitter_info) {}
+
 
     vec3 normal (const vec3& point) const
     {
@@ -500,8 +507,17 @@ struct sphere : Object
                 ray.info.point = I;
                 ray.info.distance = dist;
                 ray.info.normal = normal (I);
-                ray.info.color = surface_color;
-                ray.info.emitter = nullptr;
+
+                if (emitter.has_value ())
+                {
+                    ray.info.emitter = &(*this -> emitter);
+
+                } else
+                {
+                    ray.info.color = surface_color;
+                    ray.info.emitter = nullptr;
+                }
+
                 return true;
             }
 
@@ -515,8 +531,17 @@ struct sphere : Object
                 ray.info.point = I;
                 ray.info.distance = dist;
                 ray.info.normal = normal (I);
-                ray.info.color = surface_color;
-                ray.info.emitter = nullptr;
+
+                if (emitter.has_value ())
+                {
+                    ray.info.emitter = &(*this -> emitter);
+
+                } else
+                {
+                    ray.info.color = surface_color;
+                    ray.info.emitter = nullptr;
+                }
+
                 return true;
             }
 
@@ -530,8 +555,17 @@ struct sphere : Object
                 ray.info.point = I;
                 ray.info.distance = dist;
                 ray.info.normal = normal (I);
-                ray.info.color = surface_color;
-                ray.info.emitter = nullptr;
+
+                if (emitter.has_value ())
+                {
+                    ray.info.emitter = &(*this -> emitter);
+
+                } else
+                {
+                    ray.info.color = surface_color;
+                    ray.info.emitter = nullptr;
+                }
+
                 return true;
             }
         }
@@ -586,7 +620,7 @@ struct Plane : Object
                 ray.info.distance = dist;
                 ray.info.normal = normal;
 
-                if (this -> emitter.has_value ())
+                if (emitter.has_value ())
                 {
                     ray.info.emitter = &(*this -> emitter);
 
@@ -603,6 +637,7 @@ struct Plane : Object
         return false;
     }
 };
+
 
 inline vec3 calculate_pixel_cords (const camera3D& camera, const float pixel_x, const float pixel_y)
 {
@@ -625,6 +660,7 @@ inline ray cast_ray (const camera3D& camera, const float x, const float y)
 
 inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray& ray, const int max_bounces)
 {
+    // vec3 sky_color = {0.5f, 0.8f, 1.0f};
     vec3 sky_color = {};
     vec3 contrib;
     vec3 dir;
@@ -660,7 +696,7 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
 
         contrib *= ray.info.color;
         ray.origin = ray.info.point.add (ray.info.normal.mul (0.0001f));
-        vec3 rand_vec = ray.info.normal.add (random_sphere_vector_normalized ()).normalized ();
+        vec3 rand_vec = ray.info.normal.add (random_Sphere_vector_normalized ()).normalized ();
 
         if (rand_vec.dot (ray.info.normal) < 0.0f)
         {
@@ -671,8 +707,8 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
         ray.direction = dir;
         ray.pixel_color_contribution = contrib;
         ray.bounces ++;
+
         ray.info.distance = 1e6f;
-        ray.info.emitter = nullptr;
     }
 
     return {0.0f, 0.0f, 0.0f};

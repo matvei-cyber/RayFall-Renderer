@@ -2,14 +2,17 @@
 
 int main ()
 {
-    camera3D camera = {vec3 {1.0f, -0.5f, 0.5f}, vec3 {-0.15f, 0.15f, 0.0f}, 75.0f, 1920.0f, 1080.0f};
+    camera3D camera = {vec3 {0.75f, -0.4f, 0.5f}, vec3 {-2.0f, 0.5f, 0.0f}, 90.0f, 1920.0f, 1080.0f};
 
     std::vector <std::unique_ptr <Object>> scene;
 
-    scene.emplace_back (std::make_unique <Plane> (5.0f, -1.5f, 1.5f, -1.5f, 1.5f, vec3 {0.0f, 0.0f, -1.0f}, Emitter {vec3 {1.0f, 1.0f, 1.0f}, 5.0f}));
-    scene.emplace_back (std::make_unique <Plane> (0.0f, -0.5f, 0.5f, -0.5f, 0.5f, vec3 {0.0f, 0.0f, 1.0f}, vec3 {0.85f, 0.85f, 0.85f}));
-    scene.emplace_back (std::make_unique <sphere> (vec3 {0.15f, 0.15f, 0.126f}, 0.125f, vec3 {1.0f, 0.0f, 0.1f}));
-    scene.emplace_back (std::make_unique <sphere> (vec3 {-0.15f, -0.15f, 0.126f}, 0.125f, vec3 {0.8f, 0.0f, 1.0f}));
+    scene.emplace_back (std::make_unique <Plane> (0.0f, -2.5f, 2.5f, -2.5f, 2.5f, vec3 {0.0f, 0.0f, 1.0f}, vec3 {0.85f, 0.85f, 0.85f}));
+    scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.5f, 0.5f, 0.2501f}, 0.25f, vec3 {0.0f, 1.0f, 0.25f}));
+    scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.5f, -0.5f, 0.2501f}, 0.25f, vec3 {0.8f, 0.0f, 0.0f}));
+    scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.1f, 0.3f, 0.1251f}, 0.125f, vec3 {0.0f, 0.25f, 0.8f}));
+    scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.12f, -0.15f, 0.4f}, 0.125f, vec3 {0.5f, 0.0f, 0.8f}));
+    scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.02f, -0.1f, 0.0501f}, 0.05f, vec3 {0.0f, 0.8f, 0.0f}));
+    scene.emplace_back (std::make_unique <Sphere> (vec3 {1.0f, 1.0f, 2.0f}, 0.5f, Emitter {vec3 {1.0f, 1.0f, 1.0f}, 25.0f}));
 
     std::vector <Color> pixels ((long long unsigned int) (camera.width * camera.height), BLACK);
     Image img = GenImageColor ((int) camera.width, (int) camera.height, BLACK);
@@ -37,7 +40,7 @@ int main ()
                 for (int j = 0; j < (int) camera.width; j++)
                 {
                     ray ray = cast_ray (camera, (float) j, (float) i);
-                    pixel_color = trace_ray (scene, ray, 12);
+                    pixel_color = trace_ray (scene, ray, 6);
                     accum_buffer [(long long unsigned int) ((float) i * camera.width + (float) j)].add_rw (pixel_color);
                 }
             }
@@ -66,7 +69,7 @@ int main ()
         BeginDrawing ();
             ClearBackground (WHITE);
             DrawTexture (texture, 0, 0, WHITE);
-            DrawText (TextFormat ("Samples: %d%s", samples_done, pause ? " [PAUSED]" : ""), 25, 25, 24, Color {0, 255, 100, 255});
+            DrawText (TextFormat ("Samples: %d%s", samples_done, pause ? " [PAUSED]" : ""), 25, 25, 24, Color {255, 255, 255, 255});
         EndDrawing ();
     }
 
