@@ -5,6 +5,8 @@ int main ()
     camera3D camera = {vec3 {1.0f, -0.5f, 0.5f}, vec3 {-0.15f, 0.15f, 0.0f}, 75.0f, 1920.0f, 1080.0f};
 
     std::vector <std::unique_ptr <Object>> scene;
+
+    scene.emplace_back (std::make_unique <Plane> (5.0f, -1.5f, 1.5f, -1.5f, 1.5f, vec3 {0.0f, 0.0f, -1.0f}, Emitter {vec3 {1.0f, 1.0f, 1.0f}, 5.0f}));
     scene.emplace_back (std::make_unique <Plane> (0.0f, -0.5f, 0.5f, -0.5f, 0.5f, vec3 {0.0f, 0.0f, 1.0f}, vec3 {0.85f, 0.85f, 0.85f}));
     scene.emplace_back (std::make_unique <sphere> (vec3 {0.15f, 0.15f, 0.126f}, 0.125f, vec3 {1.0f, 0.0f, 0.1f}));
     scene.emplace_back (std::make_unique <sphere> (vec3 {-0.15f, -0.15f, 0.126f}, 0.125f, vec3 {0.8f, 0.0f, 1.0f}));
@@ -17,7 +19,7 @@ int main ()
 
     std::vector <vec3> accum_buffer ((size_t) (camera.width * camera.height), vec3 {0.0f, 0.0f, 0.0f});
     vec3 pixel_color;
-    int samples_count = 128;
+    int samples_count = 1024;
     int samples_done = 0;
     bool pause = false;
 
@@ -42,29 +44,29 @@ int main ()
 
             samples_done ++;
 
-            for (int i = 0; i < (int) accum_buffer.size (); i++)
+            if (((samples_done % 10) == 0) || (samples_done == samples_count) || (samples_done == 1))
             {
-                vec3 final_color = accum_buffer [(long long unsigned int) i];
-                final_color.div_rw ((float) samples_done);
-                convert_linear_RGB_to_sRGB (final_color);
-
-                pixels [(long long unsigned int) i] = Color
+                for (int i = 0; i < (int) accum_buffer.size (); i++)
                 {
-                    (unsigned char) (clamp (final_color.x, 0.0f, 1.0f) * 255),
-                    (unsigned char) (clamp (final_color.y, 0.0f, 1.0f) * 255),
-                    (unsigned char) (clamp (final_color.z, 0.0f, 1.0f) * 255), 255
-                };
-            }
+                    vec3 final_color = accum_buffer [(size_t) i].div ((float) samples_done);
+                    convert_linear_RGB_to_sRGB (final_color);
 
-            UpdateTexture (texture, pixels.data ());
+                    pixels [(size_t) i] = Color
+                    {
+                        (unsigned char) (clamp (final_color.x, 0.0f, 1.0f) * 255),
+                        (unsigned char) (clamp (final_color.y, 0.0f, 1.0f) * 255),
+                        (unsigned char) (clamp (final_color.z, 0.0f, 1.0f) * 255), 255
+                    };
+                }
+
+                UpdateTexture (texture, pixels.data ());
+            }
         }
 
         BeginDrawing ();
-
             ClearBackground (WHITE);
             DrawTexture (texture, 0, 0, WHITE);
-            DrawText (TextFormat ("Samples: %d", samples_done), 25, 25, 24, Color {0, 255, 100, 255});
-
+            DrawText (TextFormat ("Samples: %d%s", samples_done, pause ? " [PAUSED]" : ""), 25, 25, 24, Color {0, 255, 100, 255});
         EndDrawing ();
     }
 
