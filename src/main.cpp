@@ -1,5 +1,4 @@
 #include "kernel.hpp"
-#include "raylib.h"
 
 int main ()
 {
