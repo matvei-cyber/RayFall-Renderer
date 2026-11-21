@@ -24,6 +24,7 @@ int main ()
     vec3 pixel_color;
     int samples_count = 128;
     int samples_done = 0;
+    int max_bounces = 6;
     bool pause = false;
 
     while (!WindowShouldClose ())
@@ -40,7 +41,7 @@ int main ()
                 for (int j = 0; j < (int) camera.width; j++)
                 {
                     ray ray = cast_ray (camera, (float) j, (float) i);
-                    pixel_color = trace_ray (scene, ray, 6);
+                    pixel_color = trace_ray (scene, ray, max_bounces);
                     accum_buffer [(long long unsigned int) ((float) i * camera.width + (float) j)].add_rw (pixel_color);
                 }
             }
