@@ -669,7 +669,6 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
     {
         bool hit_anything = false;
         contrib = ray.pixel_color_contribution;
-        dir = ray.direction;
 
         for (const auto& obj : scene)
         {
@@ -703,11 +702,9 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
             rand_vec = -rand_vec;
         }
 
-        dir = rand_vec;
-        ray.direction = dir;
+        ray.direction = rand_vec;
         ray.pixel_color_contribution = contrib;
         ray.bounces ++;
-
         ray.info.distance = 1e6f;
     }
 
