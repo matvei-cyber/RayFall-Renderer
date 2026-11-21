@@ -433,7 +433,7 @@ struct ray
     int bounces = 0;
 
     ray () : origin (vec3 {}), direction (vec3 {1.0f, 0.0f, 0.0f}) {}
-    ray (const vec3& origin_position, const vec3& direction) : origin (origin_position), direction (direction) {}
+    ray (const vec3& origin_position, const vec3& direction_vector) : origin (origin_position), direction (direction_vector) {}
 };
 
 struct Object
