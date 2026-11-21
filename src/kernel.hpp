@@ -627,12 +627,6 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
         {
             rand_vec = -rand_vec;
 
-        } else if (std::abs (rand_vec.dot (ray.info.normal)) < 0.0001f)
-        {
-            while (std::abs (rand_vec.dot (ray.info.normal)) < 0.0001f)
-            {
-                rand_vec = random_sphere_vector_normalized ();
-            }
         }
 
         ray.color_contrib.mul_rw (2.0f * rand_vec.dot (ray.info.normal));
