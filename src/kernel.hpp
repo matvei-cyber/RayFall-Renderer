@@ -2,6 +2,7 @@
 #include <cmath>
 #include <memory>
 #include <random>
+#include <optional>
 #include "raylib.h"
 inline const float pi = std::acos (-1.0f);
 
@@ -416,12 +417,22 @@ struct camera3D
     }
 };
 
+struct Emitter
+{
+    vec3 color;
+    float power;
+
+    Emitter () : color (1.0f, 1.0f, 1.0f), power (1.0f) {}
+    Emitter (const vec3& light_color, const float power_value) : color (light_color), power (power_value) {}
+};
+
 struct hit_info
 {
     float distance = 1e6f;
     vec3 point;
     vec3 normal;
     vec3 color;
+    const Emitter* emitter = nullptr;
 };
 
 struct ray
@@ -490,6 +501,7 @@ struct sphere : Object
                 ray.info.distance = dist;
                 ray.info.normal = normal (I);
                 ray.info.color = surface_color;
+                ray.info.emitter = nullptr;
                 return true;
             }
 
@@ -504,6 +516,7 @@ struct sphere : Object
                 ray.info.distance = dist;
                 ray.info.normal = normal (I);
                 ray.info.color = surface_color;
+                ray.info.emitter = nullptr;
                 return true;
             }
 
@@ -518,6 +531,7 @@ struct sphere : Object
                 ray.info.distance = dist;
                 ray.info.normal = normal (I);
                 ray.info.color = surface_color;
+                ray.info.emitter = nullptr;
                 return true;
             }
         }
@@ -535,6 +549,7 @@ struct Plane : Object
     float max_y;
     vec3 normal;
     vec3 surface_color;
+    std::optional <Emitter> emitter = std::nullopt;
 
 
     Plane () : z_level (0.0f), min_x (-1.0f), max_x (1.0f), min_y (-1.0f), max_y (1.0f), normal (0.0f, 0.0f, 1.0f), surface_color (1.0f, 1.0f, 1.0f) {}
@@ -542,6 +557,10 @@ struct Plane : Object
     Plane (const float z_position, const float min_x_pos, const float max_x_pos, const float min_y_pos, const float max_y_pos, const vec3& normal_vec,
            const vec3& surface_color_value): z_level (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos),
            normal (normal_vec), surface_color (surface_color_value) {}
+
+    Plane (const float z_position, const float min_x_pos, const float max_x_pos, const float min_y_pos, const float max_y_pos, const vec3& normal_vec,
+           const Emitter& emitter_info): z_level (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos),
+           normal (normal_vec), emitter (emitter_info) {}
 
     bool intersect (ray& ray)
     {
@@ -566,7 +585,17 @@ struct Plane : Object
                 ray.info.point = I;
                 ray.info.distance = dist;
                 ray.info.normal = normal;
-                ray.info.color = surface_color;
+
+                if (this -> emitter.has_value ())
+                {
+                    ray.info.emitter = &(*this -> emitter);
+
+                } else
+                {
+                    ray.info.emitter = nullptr;
+                    ray.info.color = surface_color;
+                }
+
                 return true;
             }
         }
@@ -596,13 +625,12 @@ inline ray cast_ray (const camera3D& camera, const float x, const float y)
 
 inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray& ray, const int max_bounces)
 {
-    vec3 sky_color = {0.25f, 0.5f, 1.0f};
+    vec3 sky_color = {};
     vec3 contrib;
     vec3 dir;
 
     while (ray.bounces < max_bounces)
     {
-        ray.info.distance = 1e6f;
         bool hit_anything = false;
         contrib = ray.pixel_color_contribution;
         dir = ray.direction;
@@ -620,6 +648,11 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
             return contrib * sky_color;
         }
 
+        if (ray.info.emitter != nullptr)
+        {
+            return contrib * (ray.info.emitter -> color).mul (ray.info.emitter -> power);
+        }
+
         if (dir.dot (ray.info.normal) > 0.0f)
         {
             ray.info.normal = -ray.info.normal;
@@ -627,18 +660,19 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
 
         contrib *= ray.info.color;
         ray.origin = ray.info.point.add (ray.info.normal.mul (0.0001f));
-        vec3 rand_vec = random_sphere_vector_normalized ();
+        vec3 rand_vec = ray.info.normal.add (random_sphere_vector_normalized ()).normalized ();
 
         if (rand_vec.dot (ray.info.normal) < 0.0f)
         {
             rand_vec = -rand_vec;
         }
 
-        contrib.mul_rw (2.0f * rand_vec.dot (ray.info.normal));
         dir = rand_vec;
         ray.direction = dir;
         ray.pixel_color_contribution = contrib;
         ray.bounces ++;
+        ray.info.distance = 1e6f;
+        ray.info.emitter = nullptr;
     }
 
     return {0.0f, 0.0f, 0.0f};
@@ -646,6 +680,7 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
 
 inline void init (const camera3D& camera)
 {
+    SetConfigFlags (FLAG_VSYNC_HINT);
     InitWindow ((int) camera.width, (int) camera.height, "Ray Casting 3D");
 }
 
