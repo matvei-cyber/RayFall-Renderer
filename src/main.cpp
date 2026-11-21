@@ -5,7 +5,7 @@ int main ()
     camera3D camera = {vec3 {1.0f, -0.5f, 0.5f}, vec3 {-0.15f, 0.15f, 0.0f}, 75.0f, 1920.0f, 1080.0f};
 
     std::vector <std::unique_ptr <Object>> scene;
-    scene.emplace_back (std::make_unique <Plane> (0.0f, -0.5f, 0.5f, -0.5f, 0.5f, vec3 {0.85f, 0.85f, 0.85f}));
+    scene.emplace_back (std::make_unique <Plane> (0.0f, -0.5f, 0.5f, -0.5f, 0.5f, vec3 {0.0f, 0.0f, 1.0f}, vec3 {0.85f, 0.85f, 0.85f}));
     scene.emplace_back (std::make_unique <sphere> (vec3 {0.15f, 0.15f, 0.125f}, 0.125f, vec3 {1.0f, 0.0f, 0.1f}));
     scene.emplace_back (std::make_unique <sphere> (vec3 {-0.15f, -0.15f, 0.125f}, 0.125f, vec3 {0.8f, 0.0f, 1.0f}));
 
