@@ -373,6 +373,50 @@ inline float clamp (const float var, const float min_val, const float max_val)
     }
 }
 
+inline void clamp_color (vec3& color, const float min_value, const float max_value)
+{
+    if (color.x < min_value)
+    {
+        color.x = min_value;
+
+    } else if (color.x > max_value)
+    {
+        color.x = max_value;
+
+    } else
+    {
+        color.x = color.x;
+    }
+
+
+    if (color.y < min_value)
+    {
+        color.y = min_value;
+
+    } else if (color.y > max_value)
+    {
+        color.y = max_value;
+
+    } else
+    {
+        color.y = color.y;
+    }
+
+
+    if (color.z < min_value)
+    {
+        color.z = min_value;
+
+    } else if (color.z > max_value)
+    {
+        color.z = max_value;
+
+    } else
+    {
+        color.z = color.z;
+    }
+}
+
 
 struct camera3D
 {
@@ -426,12 +470,15 @@ struct Emitter
     Emitter (const vec3& light_color, const float power_value) : color (light_color), power (power_value) {}
 };
 
+struct BSDF;
+
 struct hit_info
 {
     float distance = 1e6f;
     vec3 point;
     vec3 normal;
     vec3 color;
+    const BSDF* material = nullptr;
     const Emitter* emitter = nullptr;
 };
 
@@ -445,7 +492,94 @@ struct ray
 
     ray () : origin (vec3 {}), direction (vec3 {1.0f, 0.0f, 0.0f}) {}
     ray (const vec3& origin_position, const vec3& direction_vector) : origin (origin_position), direction (direction_vector) {}
+
+    vec3 reflected ()
+    {
+        return direction.sub (info.normal.mul (2.0f * direction.dot (info.normal))).normalized ();
+    }
 };
+
+struct BSDF
+{
+    virtual ~BSDF () = default;
+    virtual void scatter (ray& ray) const = 0;
+};
+
+struct Diffuse : BSDF
+{
+    vec3 color;
+
+    Diffuse () : color (1.0f, 1.0f, 1.0f) {}
+    Diffuse (const vec3& color_value) : color (color_value) {}
+
+    void scatter (ray& ray) const override
+    {
+        vec3 dir = ray.direction;
+        vec3 contrib = ray.pixel_color_contribution;
+
+        if (dir.dot (ray.info.normal) > 0.0f)
+        {
+            ray.info.normal = -ray.info.normal;
+        }
+
+        contrib *= color;
+        ray.origin = ray.info.point.add (ray.info.normal.mul (0.0001f));
+        vec3 rand_vec = ray.info.normal.add (random_Sphere_vector_normalized ()).normalized ();
+
+        if (rand_vec.dot (ray.info.normal) < 0.0f)
+        {
+            rand_vec = -rand_vec;
+        }
+
+        ray.direction = rand_vec;
+        ray.pixel_color_contribution = contrib;
+        ray.bounces ++;
+        ray.info.distance = 1e6f;
+    }
+};
+
+struct Glossy : BSDF
+{
+    vec3 color;
+    float roughness;
+
+    Glossy (const vec3& color_value, const float roughness_value) : color (color_value), roughness (roughness_value) {}
+
+    void scatter (ray& ray) const override
+    {
+        if (ray.direction.dot (ray.info.normal) > 0.0f)
+        {
+            ray.info.normal = -ray.info.normal;
+        }
+
+        vec3 reflected = ray.reflected ();
+        vec3 diffuse_dir = ray.info.normal.add (random_Sphere_vector_normalized ()).normalized ();
+
+        if (diffuse_dir.dot (ray.info.normal) < 0.0f)
+        {
+            diffuse_dir = -diffuse_dir;
+        }
+
+        float alpha = roughness * roughness;
+
+        vec3 reflected_component = reflected.mul (1.0f - alpha);
+        vec3 diffuse_component = diffuse_dir.mul (alpha);
+
+        vec3 scattered = reflected_component.add (diffuse_component).normalized ();
+
+        if (scattered.dot (ray.info.normal) <= 0.0f)
+        {
+            scattered = -scattered;
+        }
+
+        ray.pixel_color_contribution *= color;
+        ray.origin = ray.info.point.add (ray.info.normal.mul (0.0001f));
+        ray.direction = scattered;
+        ray.bounces ++;
+        ray.info.distance = 1e6f;
+    }
+};
+
 
 struct Object
 {
@@ -457,12 +591,12 @@ struct Sphere : Object
 {
     vec3 origin;
     float radius;
-    vec3 surface_color;
+    std::shared_ptr <BSDF> material;
     std::optional <Emitter> emitter = std::nullopt;
 
 
-    Sphere (const vec3& origin_position, const float radius_value, const vec3& surface_color_value):
-    origin (origin_position), radius (radius_value), surface_color (surface_color_value) {}
+    Sphere (const vec3& origin_position, const float radius_value, const std::shared_ptr <BSDF>& mat):
+    origin (origin_position), radius (radius_value), material (std::move (mat)) {}
 
     Sphere (const vec3& origin_position, const float radius_value, const Emitter& emitter_info):
     origin (origin_position), radius (radius_value), emitter (emitter_info) {}
@@ -514,7 +648,7 @@ struct Sphere : Object
 
                 } else
                 {
-                    ray.info.color = surface_color;
+                    ray.info.material = material.get ();
                     ray.info.emitter = nullptr;
                 }
 
@@ -538,7 +672,7 @@ struct Sphere : Object
 
                 } else
                 {
-                    ray.info.color = surface_color;
+                    ray.info.material = material.get ();
                     ray.info.emitter = nullptr;
                 }
 
@@ -562,7 +696,7 @@ struct Sphere : Object
 
                 } else
                 {
-                    ray.info.color = surface_color;
+                    ray.info.material = material.get ();
                     ray.info.emitter = nullptr;
                 }
 
@@ -582,15 +716,13 @@ struct Plane : Object
     float min_y;
     float max_y;
     vec3 normal;
-    vec3 surface_color;
+    std::shared_ptr <BSDF> material;
     std::optional <Emitter> emitter = std::nullopt;
 
 
-    Plane () : z_level (0.0f), min_x (-1.0f), max_x (1.0f), min_y (-1.0f), max_y (1.0f), normal (0.0f, 0.0f, 1.0f), surface_color (1.0f, 1.0f, 1.0f) {}
-
     Plane (const float z_position, const float min_x_pos, const float max_x_pos, const float min_y_pos, const float max_y_pos, const vec3& normal_vec,
-           const vec3& surface_color_value): z_level (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos),
-           normal (normal_vec), surface_color (surface_color_value) {}
+           const std::shared_ptr <BSDF>& mat): z_level (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos),
+           normal (normal_vec), material (std::move (mat)) {}
 
     Plane (const float z_position, const float min_x_pos, const float max_x_pos, const float min_y_pos, const float max_y_pos, const vec3& normal_vec,
            const Emitter& emitter_info): z_level (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos),
@@ -627,7 +759,7 @@ struct Plane : Object
                 } else
                 {
                     ray.info.emitter = nullptr;
-                    ray.info.color = surface_color;
+                    ray.info.material = material.get ();
                 }
 
                 return true;
@@ -650,7 +782,7 @@ inline vec3 calculate_pixel_cords (const camera3D& camera, const float pixel_x, 
     return px_pos;
 }
 
-inline ray cast_ray (const camera3D& camera, const float x, const float y)
+inline ray cast_ray_from_camera (const camera3D& camera, const float x, const float y)
 {
     vec3 ray_target = calculate_pixel_cords (camera, x, y);
     vec3 ray_dir = ray_target.sub (camera.origin).normalized ();
@@ -658,21 +790,21 @@ inline ray cast_ray (const camera3D& camera, const float x, const float y)
     return ray;
 }
 
-inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray& ray, const int max_bounces)
+inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray& current_ray, const int max_bounces)
 {
     // vec3 sky_color = {0.5f, 0.8f, 1.0f};
     vec3 sky_color = {};
     vec3 contrib;
     vec3 dir;
 
-    while (ray.bounces < max_bounces)
+    while (current_ray.bounces < max_bounces)
     {
         bool hit_anything = false;
-        contrib = ray.pixel_color_contribution;
+        contrib = current_ray.pixel_color_contribution;
 
         for (const auto& obj : scene)
         {
-            if (obj -> intersect (ray))
+            if (obj -> intersect (current_ray))
             {
                 hit_anything = true;
             }
@@ -683,32 +815,20 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
             return contrib * sky_color;
         }
 
-        if (ray.info.emitter != nullptr)
+        if (current_ray.info.emitter != nullptr)
         {
-            return contrib * (ray.info.emitter -> color).mul (ray.info.emitter -> power);
+            return contrib * (current_ray.info.emitter -> color).mul (current_ray.info.emitter -> power);
         }
 
-        if (dir.dot (ray.info.normal) > 0.0f)
+        if (dir.dot (current_ray.info.normal) > 0.0f)
         {
-            ray.info.normal = -ray.info.normal;
+            current_ray.info.normal = -current_ray.info.normal;
         }
 
-        contrib *= ray.info.color;
-        ray.origin = ray.info.point.add (ray.info.normal.mul (0.0001f));
-        vec3 rand_vec = ray.info.normal.add (random_Sphere_vector_normalized ()).normalized ();
-
-        if (rand_vec.dot (ray.info.normal) < 0.0f)
-        {
-            rand_vec = -rand_vec;
-        }
-
-        ray.direction = rand_vec;
-        ray.pixel_color_contribution = contrib;
-        ray.bounces ++;
-        ray.info.distance = 1e6f;
+        current_ray.info.material -> scatter (current_ray);
     }
 
-    return {0.0f, 0.0f, 0.0f};
+    return vec3 {0.0f, 0.0f, 0.0f};
 }
 
 inline void init (const camera3D& camera)
