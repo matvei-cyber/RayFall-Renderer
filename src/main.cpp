@@ -23,7 +23,7 @@ int main ()
 
     std::vector <vec3> accum_buffer ((size_t) (camera.width * camera.height), vec3 {0.0f, 0.0f, 0.0f});
     vec3 pixel_color;
-    int samples_count = 128;
+    int samples_count = 1024;
     int samples_done = 0;
     int max_bounces = 6;
     bool pause = false;
