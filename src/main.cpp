@@ -13,7 +13,7 @@ struct render_worker
     render_worker (const int width, const int height) : accum_buffer ((long long unsigned int) (width * height)) {}
 };
 
-void worker_loop (const std::vector <std::unique_ptr <Object>>& scene, const int max_bounces, const camera3D& camera, render_worker& worker, std::atomic <bool>& running)
+void worker_loop (const std::vector <std::unique_ptr <Object>>& scene, const int max_bounces, const camera3D& camera, render_worker& worker, const std::atomic <bool>& running)
 {
     while (running.load (std::memory_order_relaxed))
     {
@@ -46,6 +46,7 @@ int main ()
     scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.02f, -0.1f, 0.0501f}, 0.05f, std::make_shared <Diffuse> (vec3 {0.1f, 0.1f, 0.85f})));
     Sphere lamp = {vec3 {1.0f, 1.0f, 2.0f}, 1.0f, Emitter {vec3 {1.0f, 1.0f, 1.0f}, 5.0f}};
     scene.emplace_back (std::make_unique <Sphere> (lamp));
+    int max_bounces = 6;
 
     std::vector <Color> pixels ((long long unsigned int) (camera.width * camera.height), BLACK);
     Image img = GenImageColor ((int) camera.width, (int) camera.height, BLACK);
@@ -64,7 +65,7 @@ int main ()
     }
     for (unsigned int i = 0; i < num_threads; i++)
     {
-        workers [i] -> thread = std::thread (worker_loop, std::cref (scene), 6, std::cref (camera), std::ref (*workers [i]), std::ref (running));
+        workers [i] -> thread = std::thread (worker_loop, std::cref (scene), max_bounces, std::cref (camera), std::ref (*workers [i]), std::ref (running));
     }
 
     auto last_update = std::chrono::steady_clock::now ();
@@ -85,7 +86,7 @@ int main ()
         {
             last_update = now;
 
-            std::vector<int> current_samples(num_threads);
+            std::vector <int> current_samples (num_threads);
             long long sum_samples = 0;
 
             for (unsigned int i = 0; i < num_threads; i++)
@@ -93,6 +94,7 @@ int main ()
                 current_samples [i] = workers [i] -> samples_done.load (std::memory_order_acquire);
                 sum_samples += current_samples [i];
             }
+
             total_samples_rendered = (int) sum_samples;
 
             if (sum_samples > 0)
