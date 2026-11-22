@@ -197,15 +197,15 @@ int main ()
 
             if (is_paused)
             {
-                DrawText (TextFormat ("Threads: %d | SPP: %d / %d | Time: %.2f [PAUSED]", num_threads, samples_now, max_samples, render_time_count), 10, 10, 20, ORANGE);
+                DrawText (TextFormat ("Threads: %d | SPP: %d / %d | Time: %.2f sec [PAUSED]", num_threads, samples_now, max_samples, render_time_count), 10, 10, 20, ORANGE);
             }
             else if (samples_now >= max_samples)
             {
-                DrawText (TextFormat ("Threads: %d | SPP: %d / %d | Time: %.2f [DONE]", num_threads, samples_now, max_samples, render_time_count), 10, 10, 20, GREEN);
+                DrawText (TextFormat ("Threads: %d | SPP: %d / %d | Time: %.2f sec [DONE]", num_threads, samples_now, max_samples, render_time_count), 10, 10, 20, GREEN);
             }
             else
             {
-                DrawText (TextFormat ("Threads: %d | SPP: %d / %d | Time: %.2f", num_threads, samples_now, max_samples, render_time_count), 10, 10, 20, WHITE);
+                DrawText (TextFormat ("Threads: %d | SPP: %d / %d | Time: %.2f sec", num_threads, samples_now, max_samples, render_time_count), 10, 10, 20, WHITE);
             }
 
         EndDrawing ();
