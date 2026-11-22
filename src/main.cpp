@@ -47,6 +47,7 @@ int main ()
     Sphere lamp = {vec3 {1.0f, 1.0f, 2.0f}, 1.0f, Emitter {vec3 {1.0f, 1.0f, 1.0f}, 5.0f}};
     scene.emplace_back (std::make_unique <Sphere> (lamp));
     int max_bounces = 6;
+    int max_samples = 128;
 
     std::vector <Color> pixels ((long long unsigned int) (camera.width * camera.height), BLACK);
     Image img = GenImageColor ((int) camera.width, (int) camera.height, BLACK);
@@ -82,7 +83,7 @@ int main ()
             pause = !pause;
         }
 
-        if ((elapsed >= 2.0) && !pause)
+        if ((elapsed >= 2.0) && !pause && (total_samples_rendered < max_samples))
         {
             last_update = now;
 
