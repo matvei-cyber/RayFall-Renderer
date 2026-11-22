@@ -12,7 +12,8 @@ void render_worker (
     const camera3D& camera,
     int max_bounces,
     int max_samples,
-    std::vector<vec3>& my_buffer)
+    std::vector<vec3>& my_buffer
+)
 {
     while (is_running)
     {
@@ -38,6 +39,49 @@ void render_worker (
     }
 }
 
+struct Stopwatch
+{
+    using clock = std::chrono::steady_clock;
+    clock::time_point start_time = clock::now ();
+    float accum_time = 0.0f;
+    bool running = false;
+
+    void start ()
+    {
+        if (!running)
+        {
+            start_time = clock::now ();
+            running = true;
+        }
+    }
+
+    float elapsed () const
+    {
+        if (!running)
+        {
+            return accum_time;
+        }
+
+        std::chrono::duration <float> diff = clock::now () - start_time;
+        return accum_time + diff.count ();
+    }
+
+    void pause ()
+    {
+        if (running)
+        {
+            accum_time = elapsed ();
+            running = false;
+        }
+    }
+
+    void reset ()
+    {
+        accum_time = 0.0f;
+        start_time = clock::now ();
+    }
+};
+
 int main ()
 {
     camera3D camera = {vec3 {0.75f, -0.4f, 0.5f}, vec3 {-2.0f, 0.5f, 0.0f}, 90.0f, 1920, 1080};
@@ -54,8 +98,8 @@ int main ()
     Sphere lamp = {vec3 {1.0f, 1.0f, 2.0f}, 1.0f, Emitter {vec3 {1.0f, 1.0f, 1.0f}, 5.0f}};
     scene.emplace_back (std::make_unique <Sphere> (lamp));
 
-    int max_bounces = 6;
-    int max_samples = 128;
+    int max_bounces = 12;
+    int max_samples = 1024;
 
     std::vector <Color> pixels (pixel_count, BLACK);
     Image img = GenImageColor (camera.width, camera.height, BLACK);
@@ -75,31 +119,39 @@ int main ()
         });
     }
 
-    auto last_update = std::chrono::steady_clock::now ();
-    auto last_frame_time = last_update;
-    float render_time = 0.0f;
+    Stopwatch render_time;
+    Stopwatch update_frame_time;
+    render_time.start ();
+    update_frame_time.start ();
+    float render_time_count;
+    bool final_update_done = false;
 
     while (!WindowShouldClose ())
     {
         if (IsKeyPressed (KEY_P))
         {
             is_paused = !is_paused;
+            if (is_paused)
+            {
+                update_frame_time.pause ();
+                render_time.pause ();
+            }
+            else
+            {
+                update_frame_time.start ();
+                render_time.start ();
+            }
         }
 
-        auto now = std::chrono::steady_clock::now ();
-        float dt = std::chrono::duration <float> (now - last_frame_time).count ();
-        last_frame_time = now;
-        double elapsed = std::chrono::duration <double> (now - last_update).count ();
         int samples_now = total_samples;
 
-        if (!is_paused && samples_now < max_samples)
-        {
-            render_time += dt;
-        }
+        float frame_time = update_frame_time.elapsed ();
 
-        if ((elapsed >= 2.0) && samples_now > 0)
+        bool regular_update = (samples_now > 0) && (samples_now < max_samples) && (frame_time >= 2.5f) && is_running && !is_paused;
+        bool final_update = (samples_now >= max_samples) && !final_update_done;
+
+        if (regular_update || final_update)
         {
-            last_update = now;
             float inv_samples = 1.0f / (float) samples_now;
 
             for (int p = 0; p < pixel_count; p++)
@@ -124,6 +176,19 @@ int main ()
             }
 
             UpdateTexture (texture, pixels.data ());
+            update_frame_time.reset ();
+        }
+
+        if (final_update)
+        {
+            final_update_done = true;
+        }
+
+        render_time_count = render_time.elapsed ();
+
+        if (samples_now >= max_samples)
+        {
+            render_time.pause ();
         }
 
         BeginDrawing ();
@@ -132,15 +197,15 @@ int main ()
 
             if (is_paused)
             {
-                DrawText (TextFormat ("Threads: %d | Total SPP: %d / %d | Time: %.2fs [PAUSED]", num_threads, samples_now, max_samples, render_time), 10, 10, 20, WHITE);
+                DrawText (TextFormat ("Threads: %d | SPP: %d / %d | Time: %.2f [PAUSED]", num_threads, samples_now, max_samples, render_time_count), 10, 10, 20, ORANGE);
             }
             else if (samples_now >= max_samples)
             {
-                DrawText (TextFormat ("Threads: %d | Total SPP: %d / %d | Time: %.2fs [DONE]", num_threads, samples_now, max_samples, render_time), 10, 10, 20, GREEN);
+                DrawText (TextFormat ("Threads: %d | SPP: %d / %d | Time: %.2f [DONE]", num_threads, samples_now, max_samples, render_time_count), 10, 10, 20, GREEN);
             }
             else
             {
-                DrawText (TextFormat ("Threads: %d | Total SPP: %d / %d | Time: %.2fs", num_threads, samples_now, max_samples, render_time), 10, 10, 20, WHITE);
+                DrawText (TextFormat ("Threads: %d | SPP: %d / %d | Time: %.2f", num_threads, samples_now, max_samples, render_time_count), 10, 10, 20, WHITE);
             }
 
         EndDrawing ();
