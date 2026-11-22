@@ -834,7 +834,7 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
 
 inline void init (const camera3D& camera)
 {
-    InitWindow ((int) camera.width, (int) camera.height, "Ray Casting 3D");
+    InitWindow (camera.width, camera.height, "Ray Casting 3D");
 }
 
 inline void exit ()
