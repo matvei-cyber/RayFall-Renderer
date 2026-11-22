@@ -334,7 +334,7 @@ inline void convert_linear_RGB_to_sRGB (vec3& color)
 
 inline float random_float ()
 {
-    thread_local std::mt19937 gen (0);
+    thread_local std::mt19937 gen (std::random_device {}());
     thread_local std::uniform_real_distribution <float> dist (-1.0f, 1.0f);
     return dist (gen);
 }
@@ -428,36 +428,39 @@ struct camera3D
     float aspect_ratio;
     float horizontal_FOV_degrees;
     float horizontal_FOV;
-    float width;
-    float height;
+    int width;
+    int height;
     vec3 plane_position;
     float plane_horizontal_size;
     float plane_vertical_size;
+    vec3 plane_left_up_corner_pos;
 
 
-    camera3D () : origin (vec3 {}), target (1.0f, 0.0f, 0.0f), horizontal_FOV_degrees (90.0f), width (1920.0f), height (1080.0f)
+    camera3D () : origin (vec3 {}), target (1.0f, 0.0f, 0.0f), horizontal_FOV_degrees (90.0f), width (1920), height (1080)
     {
         horizontal_FOV = deg_to_rad (horizontal_FOV_degrees);
-        aspect_ratio = width / height;
+        aspect_ratio = (float) width / (float) height;
         plane_horizontal_size = 2 * std::tanf (horizontal_FOV / 2.0f);
         plane_vertical_size = plane_horizontal_size / aspect_ratio;
         direction = target.sub (origin).normalized ();
         plane_position = origin.add (direction);
         right = direction.cross (vec3 {0.0f, 0.0f, 1.0f}).normalized ();
         up = right.cross (direction).normalized ();
+        plane_left_up_corner_pos = plane_position.add (-right.mul (plane_horizontal_size / 2.0f)).add (up.mul (plane_vertical_size / 2.0f));
     }
 
-    camera3D (const vec3& origin_position, const vec3& target_position, const float horizontal_FOV_in_degrees, const float screen_width, const float screen_height):
+    camera3D (const vec3& origin_position, const vec3& target_position, const float horizontal_FOV_in_degrees, const int screen_width, const int screen_height):
     origin (origin_position), target (target_position), horizontal_FOV_degrees (horizontal_FOV_in_degrees), width (screen_width), height (screen_height)
     {
         horizontal_FOV = deg_to_rad (horizontal_FOV_degrees);
-        aspect_ratio = width / height;
+        aspect_ratio = (float) width / (float) height;
         plane_horizontal_size = 2 * std::tanf (horizontal_FOV / 2.0f);
         plane_vertical_size = plane_horizontal_size / aspect_ratio;
         direction = target.sub (origin).normalized ();
         plane_position = origin.add (direction);
         right = direction.cross (vec3 {0.0f, 0.0f, 1.0f}).normalized ();
         up = right.cross (direction).normalized ();
+        plane_left_up_corner_pos = plane_position.add (-right.mul (plane_horizontal_size / 2.0f)).add (up.mul (plane_vertical_size / 2.0f));
     }
 };
 
@@ -618,7 +621,8 @@ struct Sphere : Object
         vec3 D = ray.direction;
         float R = radius;
 
-        float disc = (L.dot (D) * L.dot (D)) - (L.dot (L) - (R * R));
+        float b = L.dot (D);
+        float disc = (b * b) - (L.dot (L) - (R * R));
 
         if (disc < 0.0f)
         {
@@ -633,8 +637,8 @@ struct Sphere : Object
 
         if ((t1 >= 0.0f) && (t2 >= 0.0f))
         {
-            vec3 I = O.add (D.mul (std::min (t1, t2)));
-            float dist = I.sub (O).length ();
+            float dist = std::min (t1, t2);
+            vec3 I = O.add (D.mul (dist));
 
             if (dist < ray.info.distance)
             {
@@ -657,8 +661,8 @@ struct Sphere : Object
 
         } else if ((t1 >= 0.0f) && (t2 < 0.0f))
         {
-            vec3 I = O.add (D.mul (t1));
-            float dist = I.sub (O).length ();
+            float dist = t1;
+            vec3 I = O.add (D.mul (dist));
 
             if (dist < ray.info.distance)
             {
@@ -681,8 +685,8 @@ struct Sphere : Object
 
         } else if ((t1 < 0.0f) && (t2 >= 0.0f))
         {
-            vec3 I = O.add (D.mul (t2));
-            float dist = I.sub (O).length ();
+            float dist = t2;
+            vec3 I = O.add (D.mul (dist));
 
             if (dist < ray.info.distance)
             {
@@ -744,12 +748,11 @@ struct Plane : Object
         if (t >= 0.0f)
         {
             vec3 I = ray.origin.add (ray.direction.mul (t));
-            float dist = I.sub (ray.origin).length ();
 
-            if (I.x > min_x && I.x < max_x && I.y > min_y && I.y < max_y && (dist < ray.info.distance))
+            if (I.x > min_x && I.x < max_x && I.y > min_y && I.y < max_y && (t < ray.info.distance))
             {
                 ray.info.point = I;
-                ray.info.distance = dist;
+                ray.info.distance = t;
                 ray.info.normal = normal;
 
                 if (emitter.has_value ())
@@ -773,12 +776,11 @@ struct Plane : Object
 
 inline vec3 calculate_pixel_cords (const camera3D& camera, const float pixel_x, const float pixel_y)
 {
-    float norm_px_x = pixel_x / camera.width;
-    float norm_px_y = pixel_y / camera.height;
-    vec3 cam_plane_left_up_corner_pos = camera.plane_position.add (-camera.right.mul (camera.plane_horizontal_size / 2.0f)).add (camera.up.mul (camera.plane_vertical_size / 2.0f));
-    float rel_px_x_pos = (norm_px_x * camera.plane_horizontal_size) + (camera.plane_horizontal_size / (2 * camera.width));
-    float rel_px_y_pos = (norm_px_y * camera.plane_vertical_size) + (camera.plane_vertical_size / (2 * camera.height));
-    vec3 px_pos = cam_plane_left_up_corner_pos.add (camera.right.mul (rel_px_x_pos)).sub (camera.up.mul (rel_px_y_pos));
+    float norm_px_x = pixel_x / (float) camera.width;
+    float norm_px_y = pixel_y / (float) camera.height;
+    float rel_px_x_pos = (norm_px_x * camera.plane_horizontal_size) + (camera.plane_horizontal_size / (2 * (float) camera.width));
+    float rel_px_y_pos = (norm_px_y * camera.plane_vertical_size) + (camera.plane_vertical_size / (2 * (float) camera.height));
+    vec3 px_pos = camera.plane_left_up_corner_pos.add (camera.right.mul (rel_px_x_pos)).sub (camera.up.mul (rel_px_y_pos));
     return px_pos;
 }
 
@@ -795,7 +797,6 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
     // vec3 sky_color = {0.5f, 0.8f, 1.0f};
     vec3 sky_color = {};
     vec3 contrib;
-    vec3 dir;
 
     while (current_ray.bounces < max_bounces)
     {
@@ -820,7 +821,7 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
             return contrib * (current_ray.info.emitter -> color).mul (current_ray.info.emitter -> power);
         }
 
-        if (dir.dot (current_ray.info.normal) > 0.0f)
+        if (current_ray.direction.dot (current_ray.info.normal) > 0.0f)
         {
             current_ray.info.normal = -current_ray.info.normal;
         }
@@ -833,7 +834,6 @@ inline vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, ray&
 
 inline void init (const camera3D& camera)
 {
-    SetConfigFlags (FLAG_VSYNC_HINT);
     InitWindow ((int) camera.width, (int) camera.height, "Ray Casting 3D");
 }
 
