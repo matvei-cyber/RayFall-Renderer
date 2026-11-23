@@ -1,7 +1,5 @@
 cmake_minimum_required (VERSION 4.0)
 
-set (CMAKE_CXX_COMPILER "g++")
-
 project ("RayFall-Renderer" LANGUAGES CXX)
 
 set (CMAKE_CXX_STANDARD 26)
