@@ -55,6 +55,4 @@ struct vec3
     float length () const;
     void normalize ();
     vec3 normalized () const;
-    vec3 right_normal () const;
-    vec3 left_normal () const;
 };
