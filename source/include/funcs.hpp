@@ -1,7 +1,7 @@
 #pragma once
 #include "math/vec/vec.hpp"
 #include "ray/ray.hpp"
-#include "camera/camera.hpp"
+#include "camera/camera3D.hpp"
 #include "geometry/Object.hpp"
 #include <vector>
 #include <memory>

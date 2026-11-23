@@ -1,6 +1,7 @@
 #include "funcs.hpp"
 #include "raylib/raylib.h"
 
+
 vec3 calculate_pixel_cords (const camera3D& camera, const float pixel_x, const float pixel_y)
 {
     float norm_px_x = pixel_x / static_cast <float> (camera.width);

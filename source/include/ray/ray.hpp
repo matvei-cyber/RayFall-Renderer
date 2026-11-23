@@ -2,6 +2,7 @@
 #include "../math/vec/vec.hpp"
 #include "../light/emitter.hpp"
 
+
 struct BSDF;
 
 struct hit_info

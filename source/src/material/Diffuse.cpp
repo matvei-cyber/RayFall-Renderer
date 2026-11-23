@@ -2,8 +2,10 @@
 #include "material/Diffuse.hpp"
 #include "math/random/random.hpp"
 
+
 Diffuse::Diffuse () : color (1.0f, 1.0f, 1.0f) {}
 Diffuse::Diffuse (const vec3& color_value) : color (color_value) {}
+
 
 void Diffuse::scatter (ray& ray) const
 {

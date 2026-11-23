@@ -5,6 +5,7 @@
 
 Glossy::Glossy (const vec3& color_value, const float roughness_value) : color (color_value), roughness (roughness_value) {}
 
+
 void Glossy::scatter (ray& ray) const
 {
     if (ray.direction.dot (ray.info.normal) > 0.0f)

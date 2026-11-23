@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 
+
 struct Plane : Object
 {
     float z_level;
@@ -22,5 +23,6 @@ struct Plane : Object
     Plane (const float z_position, const float min_x_pos, const float max_x_pos, const float min_y_pos, const float max_y_pos, const vec3& normal_vec,
            const Emitter& emitter_info);
     
+
     bool intersect (ray& ray) override;
 };
