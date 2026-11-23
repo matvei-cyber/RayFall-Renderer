@@ -25,4 +25,5 @@ struct Plane : Object
     
 
     bool intersect (ray& ray) override;
+    vec3 random_point () override;
 };

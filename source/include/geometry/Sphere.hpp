@@ -19,4 +19,5 @@ struct Sphere : Object
 
     vec3 normal (const vec3& point) const;
     bool intersect (ray& ray) override;
+    vec3 random_point () override;
 };

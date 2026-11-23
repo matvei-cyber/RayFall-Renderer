@@ -1,5 +1,6 @@
 #include "geometry/Object.hpp"
 #include "geometry/Sphere.hpp"
+#include "math/random/random.hpp"
 #include <cmath>
 
 
@@ -114,4 +115,9 @@ bool Sphere::intersect (ray& ray)
     }
 
     return false;
+}
+
+vec3 Sphere::random_point ()
+{
+    return origin.add (random_sphere_vector_normalized ());
 }

@@ -49,3 +49,8 @@ bool Plane::intersect (ray& ray)
 
     return false;
 }
+
+vec3 Plane::random_point ()
+{
+    return vec3 {};
+}

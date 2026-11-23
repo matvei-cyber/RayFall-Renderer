@@ -37,7 +37,7 @@ int main ()
     scene.emplace_back (std::make_unique <Sphere> (lamp));
 
     int max_bounces = 6;
-    int max_samples = 1024;
+    int max_samples = 32;
 
     std::vector <Color> pixels (static_cast <std::vector <Color>::size_type> (pixel_count), BLACK);
     Image img = GenImageColor (camera.width, camera.height, BLACK);
