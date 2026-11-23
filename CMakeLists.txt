@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 4.0)
 
 project ("RayFall-Renderer" LANGUAGES CXX)
 
-set (CMAKE_CXX_STANDARD 26)
+set (CMAKE_CXX_STANDARD 23)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
 
@@ -14,13 +14,34 @@ target_include_directories (${PROJECT_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/source/include"
 )
 
-file(GLOB STATIC_LIBS "${CMAKE_CURRENT_SOURCE_DIR}/source/src/*.a")
-
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-    ${STATIC_LIBS}
+target_link_libraries (${PROJECT_NAME} PRIVATE
+    "${CMAKE_SOURCE_DIR}/source/src/libsodium.lib"
+    "${CMAKE_SOURCE_DIR}/source/src/raylib.lib"
     winmm
     gdi32
     opengl32
+    shell32
+    user32
 )
 
-string (APPEND CMAKE_CXX_FLAGS " -O3 -flto -fno-plt -Wall -Wextra -Wpedantic -Werror -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wconversion -Wsign-conversion -Wnull-dereference -Wdouble-promotion -Wformat=2 -Wimplicit-fallthrough -Wmisleading-indentation -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wuseless-cast -Wsuggest-override -static")
+target_compile_definitions (${PROJECT_NAME} PRIVATE SODIUM_STATIC)
+
+target_compile_options (${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Release>:
+        /O2
+        /Ob3
+        /Oi
+        /Ot
+        /GL
+        /fp:precise
+        /arch:AVX2
+    >
+)
+
+target_link_options (${PROJECT_NAME} PRIVATE
+    $<$<CONFIG:Release>:
+        /LTCG
+        /OPT:REF
+        /OPT:ICF
+    >
+)
