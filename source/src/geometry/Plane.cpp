@@ -10,11 +10,13 @@ Plane::Plane (const float z_position, const float min_x_pos, const float max_x_p
         normal (normal_vec), emitter (emitter_info) {}
 
 
-bool Plane::intersect (ray& ray)
+bool Plane::intersect (ray& ray) const
 {
     float p_z = z_level;
-    float ray_o_z = ray.origin.z;
-    float ray_d_z = ray.direction.z;
+    float ray_o_z = ray.get_origin ().z;
+    float ray_d_z = ray.get_direction ().z;
+    vec3 origin = ray.get_origin ();
+    vec3 dir = ray.get_direction ();
 
     if (ray_d_z == 0.0f)
     {
@@ -25,7 +27,7 @@ bool Plane::intersect (ray& ray)
 
     if (t >= 0.0f)
     {
-        vec3 I = ray.origin.add (ray.direction.mul (t));
+        vec3 I = origin.add (dir.mul (t));
 
         if (I.x > min_x && I.x < max_x && I.y > min_y && I.y < max_y && (t < ray.info.distance))
         {
@@ -48,9 +50,4 @@ bool Plane::intersect (ray& ray)
     }
 
     return false;
-}
-
-vec3 Plane::random_point ()
-{
-    return vec3 {};
 }

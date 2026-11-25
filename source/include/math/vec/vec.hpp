@@ -21,6 +21,7 @@ struct vec2
     void div_rw (const float num);
     vec2 operator* (const vec2& other) const;
     void operator*= (const vec2& other);
+    bool operator== (const vec2& other) const;
     float dot (const vec2& other) const;
     float length () const;
     void normalize ();
@@ -50,8 +51,9 @@ struct vec3
     void div_rw (const float num);
     vec3 operator* (const vec3& other) const;
     void operator*= (const vec3& other);
-    vec3 cross (const vec3& other) const;
+    bool operator== (const vec3& other) const;
     float dot (const vec3& other) const;
+    vec3 cross (const vec3& other) const;
     float length () const;
     void normalize ();
     vec3 normalized () const;

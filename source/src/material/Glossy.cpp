@@ -6,15 +6,19 @@
 Glossy::Glossy (const vec3& color_value, const float roughness_value) : color (color_value), roughness (roughness_value) {}
 
 
-void Glossy::scatter (ray& ray) const
+void Glossy::scatter (ray& ray, std::mt19937& gen, std::uniform_real_distribution <float>& dist) const
 {
-    if (ray.direction.dot (ray.info.normal) > 0.0f)
+    vec3 dir = ray.get_direction ();
+    vec3 contrib = ray.get_pixel_color_contribution ();
+    int bounces = ray.get_bounces ();
+
+    if (dir.dot (ray.info.normal) > 0.0f)
     {
         ray.info.normal = -ray.info.normal;
     }
 
     vec3 reflected = ray.reflected ();
-    vec3 diffuse_dir = ray.info.normal.add (random_sphere_vector_normalized ()).normalized ();
+    vec3 diffuse_dir = cosine_random_vector_nomralized (ray.info.normal, gen, dist);
 
     if (diffuse_dir.dot (ray.info.normal) < 0.0f)
     {
@@ -33,9 +37,9 @@ void Glossy::scatter (ray& ray) const
         scattered = -scattered;
     }
 
-    ray.pixel_color_contribution *= color;
-    ray.origin = ray.info.point.add (ray.info.normal.mul (0.0001f));
-    ray.direction = scattered;
-    ray.bounces ++;
+    ray.write_pixel_color_contribution (contrib * color);
+    ray.write_origin (ray.info.point.add (ray.info.normal.mul (0.0001f)));
+    ray.write_direction (scattered);
+    ray.write_bounces (bounces += 1);
     ray.info.distance = 1e6f;
 }

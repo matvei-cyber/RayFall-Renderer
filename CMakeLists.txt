@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 4.0)
 
 project ("RayFall-Renderer" LANGUAGES CXX)
 
-set (CMAKE_CXX_STANDARD 23)
+set (CMAKE_CXX_STANDARD 26)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
 
@@ -14,8 +14,7 @@ target_include_directories (${PROJECT_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/source/include"
 )
 
-target_link_libraries (${PROJECT_NAME} PRIVATE
-    "${CMAKE_SOURCE_DIR}/source/src/libsodium.lib"
+target_link_libraries (${PROJECT_NAME} PRIVATE 
     "${CMAKE_SOURCE_DIR}/source/src/raylib.lib"
     winmm
     gdi32
@@ -24,24 +23,9 @@ target_link_libraries (${PROJECT_NAME} PRIVATE
     user32
 )
 
-target_compile_definitions (${PROJECT_NAME} PRIVATE SODIUM_STATIC)
-
-target_compile_options (${PROJECT_NAME} PRIVATE
-    $<$<CONFIG:Release>:
-        /O2
-        /Ob3
-        /Oi
-        /Ot
-        /GL
-        /fp:precise
-        /arch:AVX2
-    >
-)
-
-target_link_options (${PROJECT_NAME} PRIVATE
-    $<$<CONFIG:Release>:
-        /LTCG
-        /OPT:REF
-        /OPT:ICF
-    >
+target_compile_options (${PROJECT_NAME} PRIVATE 
+    /O2
+    /Ob2
+    -flto
+    /W4
 )

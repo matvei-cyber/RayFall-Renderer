@@ -80,6 +80,18 @@ void vec2::operator*= (const vec2& other)
     y *= other.y;
 }
 
+bool vec2::operator== (const vec2& other) const
+{
+    if ((x == other.x) && (y == other.y))
+    {
+        return true;
+
+    } else
+    {
+        return false;
+    }
+}
+
 float vec2::dot (const vec2& other) const
 {
     return (x * other.x) + (y * other.y);
@@ -214,6 +226,23 @@ void vec3::operator*= (const vec3& other)
     z *= other.z;
 }
 
+bool vec3::operator== (const vec3& other) const
+{
+    if ((x == other.x) && (y == other.y) && (z == other.z))
+    {
+        return true;
+
+    } else
+    {
+        return false;
+    }
+}
+
+float vec3::dot (const vec3& other) const
+{
+    return (x * other.x) + (y * other.y) + (z * other.z);
+}
+
 vec3 vec3::cross (const vec3& other) const
 {
     vec3 res;
@@ -221,11 +250,6 @@ vec3 vec3::cross (const vec3& other) const
     res.y = (z * other.x) - (x * other.z);
     res.z = (x * other.y) - (y * other.x);
     return res;
-}
-
-float vec3::dot (const vec3& other) const
-{
-    return (x * other.x) + (y * other.y) + (z * other.z);
 }
 
 float vec3::length () const

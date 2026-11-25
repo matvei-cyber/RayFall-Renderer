@@ -1,6 +1,5 @@
 #pragma once
 #include "../ray/ray.hpp"
-#include "../material/Glossy.hpp"
 
 
 struct Glossy : BSDF
@@ -12,5 +11,5 @@ struct Glossy : BSDF
     Glossy (const vec3& color_value, const float roughness_value);
 
 
-    void scatter (ray& ray) const override;
+    void scatter (ray& ray, std::mt19937& gen, std::uniform_real_distribution <float>& dist) const;
 };

@@ -10,37 +10,35 @@
 #include "math/vec/vec.hpp"
 #include "ray/ray.hpp"
 #include "raylib/raylib.h"
-#include "sodium.h"
 #include "funcs.hpp"
 #include <iostream>
+#include <random>
 
 int main ()
 {
-    if (int I = sodium_init (); I != 0)
-    {
-        std::cout << "ERROR: Failed to initialize RNG." << std::endl;
-        return 1;
-    }
+    std::mt19937 gen (std::random_device {}());
+    std::uniform_real_distribution <float> dist (-1.0f, 1.0f);
 
-    camera3D camera = {vec3 {0.75f, -0.4f, 0.5f}, vec3 {-2.0f, 0.5f, 0.0f}, 90.0f, 1920, 1080};
-    int pixel_count = camera.width * camera.height;
+    vec2 camera_size = {1920.0f, 1080.0f};
+    camera3D camera = {vec3 {0.75f, -0.4f, 0.5f}, vec3 {-2.0f, 0.5f, 0.0f}, 90.0f, static_cast <int> (camera_size.x), static_cast <int> (camera_size.y)};
+    int pixel_count = camera_size.x * camera_size.y;
 
     std::vector <std::unique_ptr <Object>> scene;
-    scene.emplace_back (std::make_unique <Plane> (0.0f, -2.5f, 2.5f, -2.5f, 2.5f, vec3 {0.0f, 0.0f, 1.0f}, std::make_shared <Diffuse> (vec3{0.85f, 0.85f, 0.85f})));
-    scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.5f, 0.5f, 0.2501f}, 0.25f, std::make_shared <Glossy> (vec3 {0.96f, 0.96f, 0.96f}, 0.5f)));
+    scene.emplace_back (std::make_unique <Plane> (0.0f, -20.5f, 20.5f, -20.5f, 20.5f, vec3 {0.0f, 0.0f, 1.0f}, std::make_shared <Diffuse> (vec3 {0.85f, 0.85f, 0.85f})));
+    scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.5f, 0.5f, 0.2501f}, 0.25f, std::make_shared <Glossy> (vec3 {0.96f, 0.96f, 0.96f}, 0.0f)));
     scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.5f, -0.5f, 0.2501f}, 0.25f, std::make_shared <Diffuse> (vec3 {0.0f, 0.85f, 0.3f})));
     scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.1f, 0.3f, 0.1251f}, 0.125f, std::make_shared <Diffuse> (vec3 {0.2f, 0.0f, 0.85f})));
     scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.12f, -0.15f, 0.4f}, 0.125f, std::make_shared <Diffuse> (vec3 {0.3f, 0.5f, 0.85f})));
     scene.emplace_back (std::make_unique <Sphere> (vec3 {-0.02f, -0.1f, 0.0501f}, 0.05f, std::make_shared <Diffuse> (vec3 {0.1f, 0.1f, 0.85f})));
      
-    Sphere lamp = {vec3 {1.0f, 1.0f, 2.0f}, 1.0f, Emitter {vec3 {1.0f, 1.0f, 1.0f}, 5.0f}};
+    Sphere lamp = {vec3 {1.0f, 1.0f, 2.0f}, 1.0f, Emitter {vec3 {1.0f, 1.0f, 1.0f}, 2.5f}};
     scene.emplace_back (std::make_unique <Sphere> (lamp));
 
     int max_bounces = 6;
     int max_samples = 32;
 
     std::vector <Color> pixels (static_cast <std::vector <Color>::size_type> (pixel_count), BLACK);
-    Image img = GenImageColor (camera.width, camera.height, BLACK);
+    Image img = GenImageColor (camera_size.x, camera_size.y, BLACK);
     init (camera);
     Texture2D texture = LoadTextureFromImage (img);
     UnloadImage (img);
@@ -48,13 +46,13 @@ int main ()
 
     for (int samples_done = 0; samples_done < max_samples; samples_done++)
     {
-        for (int y = 0; y < camera.height; y++)
+        for (int y = 0; y < camera_size.y; y++)
         {
-            for (int x = 0; x < camera.width; x++)
+            for (int x = 0; x < camera_size.x; x++)
             {
-                ray r = cast_ray_from_camera (camera, static_cast <float> (x), static_cast <float> (y));
-                vec3 color = trace_ray (scene, r, max_bounces);
-                accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera.width) + x)].add_rw (color);
+                ray r = cast_ray (camera, static_cast <float> (x), static_cast <float> (y));
+                vec3 color = trace_ray (scene, vec3 {0.5f, 0.7f, 1.0f}, r, max_bounces, gen, dist);
+                accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera_size.x) + x)].add_rw (color);
             }
         }
 
@@ -63,19 +61,19 @@ int main ()
 
     std::cout << std::endl << "SPP: " << max_samples << std::endl;
 
-    for (int y = 0; y < camera.height; y++)
+    for (int y = 0; y < camera_size.y; y++)
     {
-        for (int x = 0; x < camera.width; x++)
+        for (int x = 0; x < camera_size.x; x++)
         {
-            accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera.width) + x)].div_rw (static_cast <float> (max_samples));
-            clamp_color (accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera.width) + x)], 0.0f, 1.0f);
-            convert_linear_RGB_to_sRGB (accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera.width) + x)]);
+            accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera_size.x) + x)].div_rw (static_cast <float> (max_samples));
+            clamp_color (accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera_size.x) + x)], 0.0f, 1.0f);
+            convert_linear_RGB_to_sRGB (accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera_size.x) + x)]);
 
-            pixels [static_cast <std::vector <Color>::size_type> ((y * camera.width) + x)] = Color
+            pixels [static_cast <std::vector <Color>::size_type> ((y * camera_size.x) + x)] = Color
             {
-                static_cast <unsigned char> (accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera.width) + x)].x * 255),
-                static_cast <unsigned char> (accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera.width) + x)].y * 255),
-                static_cast <unsigned char> (accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera.width) + x)].z * 255),
+                static_cast <unsigned char> (accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera_size.x) + x)].x * 255),
+                static_cast <unsigned char> (accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera_size.x) + x)].y * 255),
+                static_cast <unsigned char> (accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera_size.x) + x)].z * 255),
                 255
             };
         }

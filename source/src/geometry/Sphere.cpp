@@ -1,6 +1,7 @@
 #include "geometry/Object.hpp"
 #include "geometry/Sphere.hpp"
 #include "math/random/random.hpp"
+#include "math/consts.hpp"
 #include <cmath>
 
 
@@ -19,12 +20,12 @@ vec3 Sphere::normal (const vec3& point) const
     return N;
 }
 
-bool Sphere::intersect (ray& ray)
+bool Sphere::intersect (ray& ray) const
 {
-    vec3 O = ray.origin;
+    vec3 O = ray.get_origin ();
     vec3 C = origin;
     vec3 L = O.sub (C);
-    vec3 D = ray.direction;
+    vec3 D = ray.get_direction ();
     float R = radius;
 
     float b = L.dot (D);
@@ -115,9 +116,4 @@ bool Sphere::intersect (ray& ray)
     }
 
     return false;
-}
-
-vec3 Sphere::random_point ()
-{
-    return origin.add (random_sphere_vector_normalized ());
 }

@@ -5,19 +5,20 @@
 #include <optional>
 
 
-struct Sphere : Object
+class Sphere : public Object
 {
-    vec3 origin;
-    float radius;
-    std::shared_ptr <BSDF> material;
-    std::optional <Emitter> emitter = std::nullopt;
+    private:
 
+        vec3 origin;
+        float radius;
+        std::shared_ptr <BSDF> material;
+        std::optional <Emitter> emitter = std::nullopt;
 
-    Sphere (const vec3& origin_position, const float radius_value, const std::shared_ptr <BSDF>& mat);
-    Sphere (const vec3& origin_position, const float radius_value, const Emitter& emitter_info);
+    public:
 
+        Sphere (const vec3& origin_position, const float radius_value, const std::shared_ptr <BSDF>& mat);
+        Sphere (const vec3& origin_position, const float radius_value, const Emitter& emitter_info);
 
-    vec3 normal (const vec3& point) const;
-    bool intersect (ray& ray) override;
-    vec3 random_point () override;
+        bool intersect (ray& ray) const override;
+        vec3 normal (const vec3& point) const ;
 };
