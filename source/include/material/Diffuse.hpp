@@ -4,10 +4,6 @@
 
 struct Diffuse : BSDF
 {
-    vec3 color;
-    float roughness = 1.0f;
-
-
     Diffuse ();
     Diffuse (const vec3& color_value);
 

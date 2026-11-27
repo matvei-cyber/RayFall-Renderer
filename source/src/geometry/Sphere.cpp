@@ -2,11 +2,18 @@
 #include "geometry/Sphere.hpp"
 #include "math/random/random.hpp"
 #include "math/consts.hpp"
+#include "material/Diffuse.hpp"
 #include <cmath>
 
 
-Sphere::Sphere (const vec3& origin_position, const float radius_value, const std::shared_ptr <BSDF>& mat):
-origin (origin_position), radius (radius_value), material (std::move (mat)) {}
+Sphere::Sphere () : origin (vec3 {}), radius (1.0f)
+{
+    BSDF* mat = new Diffuse (vec3 {0.85f, 0.85f, 0.85f});
+    material = mat;
+}
+
+Sphere::Sphere (const vec3& origin_position, const float radius_value, BSDF* mat):
+origin (origin_position), radius (radius_value), material (mat) {}
 
 Sphere::Sphere (const vec3& origin_position, const float radius_value, const Emitter& emitter_info):
 origin (origin_position), radius (radius_value), emitter (emitter_info) {}
@@ -59,7 +66,7 @@ bool Sphere::intersect (ray& ray) const
 
             } else
             {
-                ray.info.material = material.get ();
+                ray.info.material = material;
                 ray.info.emitter = nullptr;
             }
 
@@ -83,7 +90,7 @@ bool Sphere::intersect (ray& ray) const
 
             } else
             {
-                ray.info.material = material.get ();
+                ray.info.material = material;
                 ray.info.emitter = nullptr;
             }
 
@@ -107,7 +114,7 @@ bool Sphere::intersect (ray& ray) const
 
             } else
             {
-                ray.info.material = material.get ();
+                ray.info.material = material;
                 ray.info.emitter = nullptr;
             }
 
@@ -116,4 +123,37 @@ bool Sphere::intersect (ray& ray) const
     }
 
     return false;
+}
+
+vec3 Sphere::get_origin () const
+{
+    return origin;
+}
+
+float Sphere::get_radius () const
+{
+    return radius;
+}
+
+void Sphere::set_origin (const vec3& new_origin)
+{
+    origin = new_origin;
+}
+
+void Sphere::set_radius (const float new_radius)
+{
+    if (new_radius > 0.001f)
+    {
+        radius = new_radius;
+    }
+}
+
+void Sphere::set_BSDF (BSDF* new_mat)
+{ 
+    material = new_mat;
+}
+
+void Sphere::set_emitter (std::optional <Emitter> emitter_info)
+{
+    emitter = emitter_info;
 }

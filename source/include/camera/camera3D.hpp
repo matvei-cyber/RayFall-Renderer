@@ -31,4 +31,9 @@ struct camera3D
         vec3 get_up () const;
         vec3 get_origin () const;
         vec3 get_plane_corner () const;
+
+        void set_origin (const vec3& new_origin);
+        void set_target (const vec3& new_target);
+        void set_FOV_degrees (const float new_FOV);
+        void set_size (const int new_width, const int new_height);
 };

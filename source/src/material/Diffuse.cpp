@@ -3,8 +3,15 @@
 #include "math/random/random.hpp"
 
 
-Diffuse::Diffuse () : color (1.0f, 1.0f, 1.0f) {}
-Diffuse::Diffuse (const vec3& color_value) : color (color_value) {}
+Diffuse::Diffuse ()
+{
+    color = vec3 {0.85f, 0.85f, 0.85f};
+}
+
+Diffuse::Diffuse (const vec3& color_value)
+{
+    color = color_value;
+}
 
 
 void Diffuse::scatter (ray& ray, std::mt19937& gen, std::uniform_real_distribution <float>& dist) const

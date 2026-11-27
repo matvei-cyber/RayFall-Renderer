@@ -33,7 +33,7 @@ ray cast_ray (const camera3D& camera, const float x, const float y)
     return r;
 }
 
-vec3 trace_ray (const std::vector <std::unique_ptr <Object>>& scene, const vec3& env_color, ray& current_ray, const int max_bounces, std::mt19937& gen, std::uniform_real_distribution <float>& dist)
+vec3 trace_ray (const std::vector <Object*>& scene, const vec3& env_color, ray& current_ray, const int max_bounces, std::mt19937& gen, std::uniform_real_distribution <float>& dist)
 {
     bool is_hit;
     int bounces = current_ray.get_bounces ();
