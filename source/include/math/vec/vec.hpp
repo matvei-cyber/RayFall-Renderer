@@ -7,7 +7,7 @@ struct vec2
 
 
     vec2 ();
-    vec2 (const float x_val, const float y_val);
+    vec2 (const float x_value, const float y_value);
 
 
     vec2 add (const vec2& other) const;
@@ -37,7 +37,7 @@ struct vec3
 
 
     vec3 ();
-    vec3 (const float x_val, const float y_val, const float z_val);
+    vec3 (const float x_value, const float y_value, const float z_value);
 
 
     vec3 add (const vec3& other) const;

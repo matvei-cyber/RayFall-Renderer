@@ -1,8 +1,6 @@
 #pragma once
 #include "../ray/ray.hpp"
 #include "Object.hpp"
-#include <memory>
-#include <optional>
 
 
 class Sphere : public Object
@@ -12,16 +10,14 @@ class Sphere : public Object
         vec3 origin;
         float radius;
         BSDF* material = nullptr;
-        std::optional <Emitter> emitter = std::nullopt;
+        Emitter* emitter = nullptr;
 
     public:
 
         Sphere ();
         Sphere (const vec3& origin_position, const float radius_value, BSDF* mat);
-        Sphere (const vec3& origin_position, const float radius_value, const Emitter& emitter_info);
+        Sphere (const vec3& origin_position, const float radius_value, Emitter* emitter_info);
 
-        bool intersect (ray& ray) const override;
-        vec3 normal (const vec3& point) const;
 
         vec3 get_origin () const;
         float get_radius () const;
@@ -29,5 +25,8 @@ class Sphere : public Object
         void set_origin (const vec3& new_origin);
         void set_radius (const float new_radius);
         void set_BSDF (BSDF* new_mat);
-        void set_emitter (std::optional <Emitter> emitter_info);
+        void set_emitter (Emitter* new_emitter);
+
+        bool intersect (ray& ray) const override;
+        vec3 normal (const vec3& point) const;
 };

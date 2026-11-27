@@ -5,12 +5,12 @@
 
 Diffuse::Diffuse ()
 {
-    color = vec3 {0.85f, 0.85f, 0.85f};
+    albedo = vec3 {0.85f, 0.85f, 0.85f};
 }
 
 Diffuse::Diffuse (const vec3& color_value)
 {
-    color = color_value;
+    albedo = color_value;
 }
 
 
@@ -26,19 +26,19 @@ void Diffuse::scatter (ray& ray, std::mt19937& gen, std::uniform_real_distributi
         ray.info.normal = -ray.info.normal;
     }
 
-    contrib *= color;
+    contrib *= albedo;
     origin = ray.info.point.add (ray.info.normal.mul (0.0001f));
-    vec3 rand_vec = cosine_random_vector_nomralized (ray.info.normal, gen, dist);
+    vec3 rand_vec = cosine_random_sphere_vector_normalized (ray.info.normal, gen, dist);
 
     if (rand_vec.dot (ray.info.normal) < 0.0f)
     {
         rand_vec = -rand_vec;
     }
 
-    ray.write_direction (rand_vec);
-    ray.write_pixel_color_contribution (contrib);
-    ray.write_bounces (bounces += 1);
-    ray.write_origin (origin);
+    ray.set_direction (rand_vec);
+    ray.set_pixel_color_contribution (contrib);
+    ray.set_bounces (bounces += 1);
+    ray.set_origin (origin);
     ray.info.distance = 1e6f;
     ray.info.emitter = nullptr;
 }

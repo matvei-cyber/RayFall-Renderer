@@ -13,7 +13,7 @@ Plane::Plane (const float z_position, const float min_x_pos, const float max_x_p
         normal (normal_vec), material (mat) {}
 
 Plane::Plane (const float z_position, const float min_x_pos, const float max_x_pos, const float min_y_pos, const float max_y_pos, const vec3& normal_vec,
-        const Emitter& emitter_info): z_level (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos),
+        Emitter* emitter_info): z_level (z_position), min_x (min_x_pos), max_x (max_x_pos), min_y (min_y_pos), max_y (max_y_pos),
         normal (normal_vec), emitter (emitter_info) {}
 
 
@@ -42,9 +42,9 @@ bool Plane::intersect (ray& ray) const
             ray.info.distance = t;
             ray.info.normal = normal;
 
-            if (emitter.has_value ())
+            if (emitter != nullptr)
             {
-                ray.info.emitter = &(*this -> emitter);
+                ray.info.emitter = this -> emitter;
 
             } else
             {
@@ -104,7 +104,7 @@ void Plane::set_material (BSDF* new_material)
     material = new_material;
 }
 
-void Plane::set_emitter (const std::optional <Emitter>& new_emitter_info)
+void Plane::set_emitter (Emitter* new_emitter)
 {
-    emitter = new_emitter_info;
+    emitter = new_emitter;
 }

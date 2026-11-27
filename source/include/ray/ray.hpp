@@ -25,28 +25,30 @@ class ray
         int bounces = 0;
 
     public:
+
         hit_info info;
+
 
         ray ();
         ray (const vec3& origin_position, const vec3& direction_vector);
+
 
         vec3 get_origin () const;
         vec3 get_direction () const;
         vec3 get_pixel_color_contribution () const;
         int get_bounces () const;
 
-        void write_origin (const vec3& new_origin);
-        void write_direction (const vec3& new_direction);
-        void write_pixel_color_contribution (const vec3& new_pixel_color_contribution);
-        void write_bounces (const int new_bounces);
+        void set_origin (const vec3& new_origin);
+        void set_direction (const vec3& new_direction);
+        void set_pixel_color_contribution (const vec3& new_pixel_color_contribution);
+        void set_bounces (const int new_bounces);
 
         vec3 reflected () const;
 };
 
 struct BSDF
 {
-    vec3 color;
-    float roughness;
+    vec3 albedo;
 
 
     virtual ~BSDF () = default;

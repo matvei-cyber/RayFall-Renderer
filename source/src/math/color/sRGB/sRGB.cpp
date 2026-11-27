@@ -66,15 +66,15 @@ void convert_linear_RGB_to_sRGB (vec3& color)
     }
 }
 
-void clamp_value (float& value, const float min_val, const float max_val)
+void clamp_value (float& value, const float min_value, const float max_value)
 {
-    if (value < min_val)
+    if (value < min_value)
     {
-        value = min_val;
+        value = min_value;
 
-    } else if (value > max_val)
+    } else if (value > max_value)
     {
-        value = max_val;
+        value = max_value;
 
     } else
     {
@@ -82,36 +82,34 @@ void clamp_value (float& value, const float min_val, const float max_val)
     }
 }
 
-void clamp_color (vec3& color, const float min_val, const float max_val)
+void clamp_color (vec3& color, const float min_value, const float max_value)
 {
-    if (color.x < min_val)
+    if (color.x < min_value)
     {
-        color.x = min_val;
+        color.x = min_value;
 
-    } else if (color.x > max_val)
+    } else if (color.x > max_value)
     {
-        color.x = max_val;
-
+        color.x = max_value;
     }
 
 
-    if (color.y < min_val)
+    if (color.y < min_value)
     {
-        color.y = min_val;
+        color.y = min_value;
 
-    } else if (color.y > max_val)
+    } else if (color.y > max_value)
     {
-        color.y = max_val;
-
+        color.y = max_value;
     }
 
 
-    if (color.z < min_val)
+    if (color.z < min_value)
     {
-        color.z = min_val;
+        color.z = min_value;
 
-    } else if (color.z > max_val)
+    } else if (color.z > max_value)
     {
-        color.z = max_val;
+        color.z = max_value;
     }
 }

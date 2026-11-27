@@ -3,7 +3,7 @@
 
 
 vec2::vec2 () : x (0.0f), y (0.0f) {}
-vec2::vec2 (const float x_val, const float y_val) : x (x_val), y (y_val) {}
+vec2::vec2 (const float x_value, const float y_value) : x (x_value), y (y_value) {}
 
 
 vec2 vec2::add (const vec2& other) const

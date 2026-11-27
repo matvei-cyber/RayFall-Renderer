@@ -18,7 +18,7 @@ void Glossy::scatter (ray& ray, std::mt19937& gen, std::uniform_real_distributio
     }
 
     vec3 reflected = ray.reflected ();
-    vec3 diffuse_dir = cosine_random_vector_nomralized (ray.info.normal, gen, dist);
+    vec3 diffuse_dir = cosine_random_sphere_vector_normalized (ray.info.normal, gen, dist);
 
     if (diffuse_dir.dot (ray.info.normal) < 0.0f)
     {
@@ -37,9 +37,9 @@ void Glossy::scatter (ray& ray, std::mt19937& gen, std::uniform_real_distributio
         scattered = -scattered;
     }
 
-    ray.write_pixel_color_contribution (contrib * color);
-    ray.write_origin (ray.info.point.add (ray.info.normal.mul (0.0001f)));
-    ray.write_direction (scattered);
-    ray.write_bounces (bounces += 1);
+    ray.set_pixel_color_contribution (contrib * color);
+    ray.set_origin (ray.info.point.add (ray.info.normal.mul (0.0001f)));
+    ray.set_direction (scattered);
+    ray.set_bounces (bounces += 1);
     ray.info.distance = 1e6f;
 }

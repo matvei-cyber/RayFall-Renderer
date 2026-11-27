@@ -2,13 +2,9 @@
 #include "xml/pugixml.hpp"
 #include "geometry/Sphere.hpp"
 #include "geometry/Plane.hpp"
-#include "camera/camera3D.hpp"
-#include "light/emitter.hpp"
 #include "material/Diffuse.hpp"
-#include "material/Glossy.hpp"
 #include "math/vec/vec.hpp"
 #include <iostream>
-#include <optional>
 
 std::vector <Object*> parse_scene_from_xml ()
 {
@@ -94,14 +90,14 @@ std::vector <Object*> parse_scene_from_xml ()
 						std::cerr << "XML PARSER WARNING: some objects with <diffuse> material have no color. Setting default: r = 0.85, g = 0.85, b = 0.85.\n";
 					}
 
-					diff -> color.x = col_node.attribute ("r").as_float (0.85f);
-					diff -> color.y = col_node.attribute ("g").as_float (0.85f);
-					diff -> color.z = col_node.attribute ("b").as_float (0.85f);
+					diff -> albedo.x = col_node.attribute ("r").as_float (0.85f);
+					diff -> albedo.y = col_node.attribute ("g").as_float (0.85f);
+					diff -> albedo.z = col_node.attribute ("b").as_float (0.85f);
 					sphere -> set_BSDF (diff);
 				}
 			} else if (emit_node && !bsdf_node)
 			{
-				Emitter emit = {};
+				Emitter* emit = new Emitter ();
 
 				pugi::xml_node col_node = emit_node.child ("color");
 				if (!col_node)
@@ -115,14 +111,14 @@ std::vector <Object*> parse_scene_from_xml ()
 					std::cerr << "XML PARSER WARNING: some emitting objects with <sphere> type have no <power> parameter. Setting default: 1.\n";
 				}
 
-				emit.color.x = col_node.attribute ("r").as_float (1.0f);
-				emit.color.y = col_node.attribute ("g").as_float (1.0f);
-				emit.color.z = col_node.attribute ("b").as_float (1.0f);
-				emit.power = pow_node.text ().as_float (1.0f);
+				emit -> color.x = col_node.attribute ("r").as_float (1.0f);
+				emit -> color.y = col_node.attribute ("g").as_float (1.0f);
+				emit -> color.z = col_node.attribute ("b").as_float (1.0f);
+				emit -> power = pow_node.text ().as_float (1.0f);
 				sphere -> set_emitter (emit);
 			}
 
-			scene.push_back (std::move (sphere));
+			scene.push_back (sphere);
 
 		} else if (type == "plane")
 		{
@@ -205,14 +201,14 @@ std::vector <Object*> parse_scene_from_xml ()
 						std::cerr << "XML PARSER WARNING: some objects with <diffuse> material have no color. Setting default: r = 0.85, g = 0.85, b = 0.85.\n";
 					}
 
-					diff -> color.x = col_node.attribute ("r").as_float (0.85f);
-					diff -> color.y = col_node.attribute ("g").as_float (0.85f);
-					diff -> color.z = col_node.attribute ("b").as_float (0.85f);
+					diff -> albedo.x = col_node.attribute ("r").as_float (0.85f);
+					diff -> albedo.y = col_node.attribute ("g").as_float (0.85f);
+					diff -> albedo.z = col_node.attribute ("b").as_float (0.85f);
 					plane -> set_material (diff);
 				}
 			} else if (emit_node && !bsdf_node)
 			{
-				Emitter emit = {};
+				Emitter* emit = new Emitter ();
 
 				pugi::xml_node col_node = emit_node.child ("color");
 				if (!col_node)
@@ -226,10 +222,10 @@ std::vector <Object*> parse_scene_from_xml ()
 					std::cerr << "XML PARSER WARNING: some emitting objects with <sphere> type have no <power> parameter. Setting default: 1.\n";
 				}
 
-				emit.color.x = col_node.attribute ("r").as_float (1.0f);
-				emit.color.y = col_node.attribute ("g").as_float (1.0f);
-				emit.color.z = col_node.attribute ("b").as_float (1.0f);
-				emit.power = pow_node.text ().as_float (1.0f);
+				emit -> color.x = col_node.attribute ("r").as_float (1.0f);
+				emit -> color.y = col_node.attribute ("g").as_float (1.0f);
+				emit -> color.z = col_node.attribute ("b").as_float (1.0f);
+				emit -> power = pow_node.text ().as_float (1.0f);
 				plane -> set_emitter (emit);
 			}
 

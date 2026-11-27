@@ -1,7 +1,5 @@
-#include "geometry/Object.hpp"
 #include "geometry/Sphere.hpp"
 #include "math/random/random.hpp"
-#include "math/consts.hpp"
 #include "material/Diffuse.hpp"
 #include <cmath>
 
@@ -15,7 +13,7 @@ Sphere::Sphere () : origin (vec3 {}), radius (1.0f)
 Sphere::Sphere (const vec3& origin_position, const float radius_value, BSDF* mat):
 origin (origin_position), radius (radius_value), material (mat) {}
 
-Sphere::Sphere (const vec3& origin_position, const float radius_value, const Emitter& emitter_info):
+Sphere::Sphere (const vec3& origin_position, const float radius_value, Emitter* emitter_info):
 origin (origin_position), radius (radius_value), emitter (emitter_info) {}
 
 
@@ -60,9 +58,9 @@ bool Sphere::intersect (ray& ray) const
             ray.info.distance = dist;
             ray.info.normal = normal (I);
 
-            if (emitter.has_value ())
+            if (emitter != nullptr)
             {
-                ray.info.emitter = &(*this -> emitter);
+                ray.info.emitter = this -> emitter;
 
             } else
             {
@@ -84,9 +82,9 @@ bool Sphere::intersect (ray& ray) const
             ray.info.distance = dist;
             ray.info.normal = normal (I);
 
-            if (emitter.has_value ())
+            if (emitter != nullptr)
             {
-                ray.info.emitter = &(*this -> emitter);
+                ray.info.emitter = this -> emitter;
 
             } else
             {
@@ -108,9 +106,9 @@ bool Sphere::intersect (ray& ray) const
             ray.info.distance = dist;
             ray.info.normal = normal (I);
 
-            if (emitter.has_value ())
+            if (emitter != nullptr)
             {
-                ray.info.emitter = &(*this -> emitter);
+                ray.info.emitter = this -> emitter;
 
             } else
             {
@@ -153,7 +151,7 @@ void Sphere::set_BSDF (BSDF* new_mat)
     material = new_mat;
 }
 
-void Sphere::set_emitter (std::optional <Emitter> emitter_info)
+void Sphere::set_emitter (Emitter* new_emitter)
 {
-    emitter = emitter_info;
+    emitter = new_emitter;
 }

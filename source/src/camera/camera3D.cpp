@@ -83,13 +83,11 @@ void camera3D::set_target (const vec3& new_target)
     }
 }
 
-void camera3D::set_FOV_degrees (const float new_FOV)
+void camera3D::set_FOV_degrees (const float new_FOV_degrees)
 {
-    if ((new_FOV < 180.0f) && (new_FOV > 0.0f))
+    if ((new_FOV_degrees < 180.0f) && (new_FOV_degrees > 0.0f))
     {
-        horizontal_FOV_degrees = new_FOV;
-        horizontal_FOV = deg_to_rad (horizontal_FOV_degrees);
-        aspect_ratio = static_cast <float> (width) / static_cast <float> (height);
+        horizontal_FOV = deg_to_rad (new_FOV_degrees);
         plane_size.x = 2 * std::tanf (horizontal_FOV / 2.0f);
         plane_size.y = plane_size.x / aspect_ratio;
         plane_left_up_corner_pos = plane_position.add (-right.mul (plane_size.x / 2.0f)).add (up.mul (plane_size.y / 2.0f));
@@ -100,8 +98,6 @@ void camera3D::set_size (const int new_width, const int new_height)
 {
     if ((new_width > 0) && (new_height > 0))
     {
-        width = new_width;
-        height = new_height;
         aspect_ratio = static_cast <float> (width) / static_cast <float> (height);
         plane_size.x = 2 * std::tanf (horizontal_FOV / 2.0f);
         plane_size.y = plane_size.x / aspect_ratio;
