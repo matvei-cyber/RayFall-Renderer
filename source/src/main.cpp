@@ -20,7 +20,7 @@ int main ()
     std::mt19937 gen (0);
     std::uniform_real_distribution <float> dist (-1.0f, 1.0f);
 
-    int max_bounces = 2;
+    int max_bounces = 6;
     int max_samples = 128;
 
     std::vector <Color> pixels (static_cast <std::vector <Color>::size_type> (pixel_count), BLACK);
