@@ -70,6 +70,15 @@ vec3 trace_ray (const std::vector <Object*>& scene, const vec3& env_color, ray& 
     return vec3 {};
 }
 
+void main_path_tracing (const camera3D& camera, const float x, const float y, const std::vector <Object*>& scene, const int max_bounces,
+                        std::mt19937& gen, std::uniform_real_distribution <float>& dist, std::vector <vec3>& accum_buffer)
+{
+    vec2 camera_size = camera.get_size ();
+    ray r = cast_ray (camera, static_cast <float> (x), static_cast <float> (y));
+    vec3 color = trace_ray (scene, vec3 {}, r, max_bounces, gen, dist);
+    accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera_size.x) + x)].add_rw (color);
+}
+
 void init (const camera3D& camera)
 {
     vec2 camera_size = camera.get_size ();

@@ -36,9 +36,7 @@ int main ()
         {
             for (int x = 0; x < camera_size.x; x++)
             {
-                ray r = cast_ray (camera, static_cast <float> (x), static_cast <float> (y));
-                vec3 color = trace_ray (scene, vec3 {}, r, max_bounces, gen, dist);
-                accum_buffer [static_cast <std::vector <vec3>::size_type> ((y * camera_size.x) + x)].add_rw (color);
+                main_path_tracing (camera, x, y, scene, max_bounces, gen, dist, accum_buffer);
             }
         }
 
